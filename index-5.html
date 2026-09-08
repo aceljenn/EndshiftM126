@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>END SHIFT M126</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F4;
+    --surface:#FFFFFF;
+    --surface-alt:#EFF1EE;
+    --border:#E1E4DF;
+    --text:#1C1F1D;
+    --text-muted:#6B716C;
+    --orange:#E8620F;
+    --orange-bg:#FDEEE1;
+    --orange-strong:#C94F09;
+    --green:#1E8E5A;
+    --green-bg:#E4F5EC;
+    --red:#C94530;
+    --red-bg:#FBEAE6;
+    --shadow: 0 1px 2px rgba(20,20,18,0.04), 0 1px 12px rgba(20,20,18,0.03);
+    --radius: 10px;
+  }
+  [data-theme="dark"]{
+    --bg:#15171A;
+    --surface:#1D2023;
+    --surface-alt:#242729;
+    --border:#2C3033;
+    --text:#EDEFEE;
+    --text-muted:#9BA1A6;
+    --orange:#FF8A3D;
+    --orange-bg:rgba(255,138,61,0.14);
+    --orange-strong:#FFA35F;
+    --green:#34C77B;
+    --green-bg:rgba(52,199,123,0.14);
+    --red:#FF6B54;
+    --red-bg:rgba(255,107,84,0.14);
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 12px rgba(0,0,0,0.25);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Plus Jakarta Sans', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+    -webkit-font-smoothing:antialiased;
+    transition: background .2s ease, color .2s ease;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:22px 20px 64px;}
+
+  /* header */
+  header{
+    display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
+    flex-wrap:wrap; margin-bottom:18px;
+  }
+  .title-block h1{
+    margin:0; font-size:26px; font-weight:800; letter-spacing:-0.01em;
+  }
+  .title-block p{margin:4px 0 0; color:var(--text-muted); font-size:13.5px;}
+  .header-controls{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  select, .btn{
+    font-family:inherit; font-size:13.5px; font-weight:600;
+    border-radius:8px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text);
+    padding:8px 12px; cursor:pointer;
+  }
+  .btn.primary{background:var(--orange); border-color:var(--orange); color:#fff;}
+  .icon-btn{
+    width:36px; height:36px; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface); color:var(--text); cursor:pointer; font-size:16px;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* report links card */
+  .links-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:12px 14px; box-shadow:var(--shadow); min-width:230px;
+  }
+  .links-card .lc-title{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); margin-bottom:8px;}
+  .links-card a{
+    display:flex; align-items:center; justify-content:space-between;
+    text-decoration:none; color:var(--text); font-size:13.5px; font-weight:600;
+    padding:8px 10px; border-radius:7px; margin-bottom:5px; background:var(--surface-alt);
+    border:1px solid transparent;
+  }
+  .links-card a:last-child{margin-bottom:0;}
+  .links-card a:hover{border-color:var(--orange); color:var(--orange-strong);}
+  .links-card a span.arrow{color:var(--orange); font-weight:800;}
+
+  /* nav pills */
+  nav.section-nav{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:22px;
+    position:sticky; top:10px; z-index:5;
+  }
+  nav.section-nav a{
+    text-decoration:none; font-size:13px; font-weight:600; color:var(--text-muted);
+    background:var(--surface); border:1px solid var(--border); padding:7px 13px; border-radius:20px;
+  }
+  nav.section-nav a:hover{color:var(--orange-strong); border-color:var(--orange);}
+
+  /* cards grid */
+  .cards-row{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:28px;}
+  @media (max-width:800px){.cards-row{grid-template-columns:1fr;}}
+  .stat-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:16px 18px; box-shadow:var(--shadow);
+  }
+  .stat-card .sc-label{font-size:12.5px; color:var(--text-muted); font-weight:600; margin-bottom:6px;}
+  .stat-card .sc-value{font-size:26px; font-weight:800; letter-spacing:-0.01em;}
+  .stat-card .sc-sub{font-size:12.5px; color:var(--text-muted); margin-top:4px;}
+  .progress-track{height:7px; border-radius:5px; background:var(--surface-alt); margin-top:10px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--orange); border-radius:5px; transition:width .3s ease;}
+  .badge{
+    display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700;
+    padding:4px 10px; border-radius:20px;
+  }
+  .badge.ok{background:var(--green-bg); color:var(--green);}
+  .badge.bad{background:var(--red-bg); color:var(--red);}
+  .badge.dot::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;}
+
+  /* sections */
+  section.panel{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px 20px 22px; margin-bottom:22px; box-shadow:var(--shadow); scroll-margin-top:60px;
+  }
+  section.panel h2{margin:0 0 3px; font-size:17px; font-weight:800;}
+  section.panel .panel-sub{margin:0 0 16px; font-size:13px; color:var(--text-muted);}
+  .week-tabs{display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;}
+  .week-tabs button{
+    font-family:inherit; font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:7px;
+    border:1px solid var(--border); background:var(--surface-alt); color:var(--text-muted); cursor:pointer;
+  }
+  .week-tabs button.active{background:var(--orange); border-color:var(--orange); color:#fff;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  thead th{
+    text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.03em;
+    color:var(--text-muted); font-weight:700; padding:8px 10px; border-bottom:1px solid var(--border);
+  }
+  tbody td{padding:10px 10px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr.total-row td{font-weight:800; background:var(--surface-alt);}
+  td.num, th.num{text-align:right;}
+  td.names{color:var(--text-muted); font-size:12.5px;}
+  .table-scroll{overflow-x:auto;}
+  .empty-note{color:var(--text-muted); font-size:13px; padding:14px 4px;}
+
+  .foot-note{font-size:12.5px; color:var(--text-muted); margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);}
+  .status-banner{
+    background:var(--red-bg); color:var(--red); border-radius:8px; padding:10px 14px; font-size:13px;
+    margin-bottom:16px; font-weight:600; display:none;
+  }
+  footer.credit{text-align:center; color:var(--text-muted); font-size:12px; margin-top:10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <h1>END SHIFT M126</h1>
+      <p id="subtitle">Tracking NPS, invoice, dan try on harian tim &middot; memuat data&hellip;</p>
+      <p style="margin:2px 0 0; font-size:11.5px; color:var(--text-muted);">by <strong style="color:var(--orange-strong);">aceljenn</strong> (Jennifer)</p>
+    </div>
+    <div class="header-controls">
+      <select id="monthSelect"></select>
+      <button class="btn" id="exportBtn" title="Export laporan bulan ini ke CSV">&#8681; Export CSV</button>
+      <button class="btn" id="refreshBtn" title="Ambil ulang data dari sheet">&#8635; Refresh</button>
+      <button class="icon-btn" id="themeToggle" title="Ganti tampilan">&#9789;</button>
+    </div>
+  </header>
+
+  <div class="cards-row" style="margin-bottom:14px;">
+    <div class="links-card" style="grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
+      <div>
+        <div class="lc-title" style="margin-bottom:2px;">Isi Form</div>
+        <div style="font-size:12.5px; color:var(--text-muted);">Klik untuk langsung masuk ke halaman pengisian</div>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSckv5jybuadbmja0zvLqJXvWLPufpTUOCHrkLrU-3Ho9nZDJA/viewform" target="_blank" rel="noopener" style="background:var(--orange-bg); color:var(--orange-strong);">Try On Aksara <span class="arrow">&rarr;</span></a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdDj3fPWA5_tZ7xBcjEhb8hMn0DAQ5Ok_joASUjwStYUjC5Ow/viewform" target="_blank" rel="noopener" style="background:var(--orange-bg); color:var(--orange-strong);">Try On Samudra <span class="arrow">&rarr;</span></a>
+        <a href="https://forms.gle/7tDiXjE5j6dxmNLu8" target="_blank" rel="noopener" style="background:var(--green-bg); color:var(--green);">End Shift M126 <span class="arrow">&rarr;</span></a>
+      </div>
+    </div>
+  </div>
+
+  <nav class="section-nav">
+    <a href="#overview">Overview</a>
+    <a href="#weekly">Rekap Mingguan</a>
+    <a href="#daily-nps">Target NPS Harian</a>
+    <a href="#aksara">Try On Aksara</a>
+    <a href="#samudra">Try On Samudra</a>
+  </nav>
+
+  <div class="status-banner" id="errorBanner"></div>
+
+  <div id="overview" class="cards-row">
+    <div class="stat-card">
+      <div class="sc-label">NPS Bulan Ini</div>
+      <div class="sc-value" id="cardMonthNps">&mdash;</div>
+      <div class="sc-sub" id="cardMonthNpsSub">dari target 100</div>
+      <div class="progress-track"><div class="progress-fill" id="cardMonthNpsBar" style="width:0%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">NPS Hari Ini</div>
+      <div class="sc-value" id="cardTodayNps">&mdash;</div>
+      <div class="sc-sub">Target harian: 4 NPS</div>
+      <div style="margin-top:8px;" id="cardTodayBadge"></div>
+    </div>
+    <div class="stat-card">
+      <div class="sc-label">Total Qty Invoice Bulan Ini</div>
+      <div class="sc-value" id="cardMonthInvoice">&mdash;</div>
+      <div class="sc-sub" id="cardMonthInvoiceSub">akumulasi seluruh staff</div>
+    </div>
+  </div>
+
+  <section class="panel" id="weekly">
+    <h2>Kontribusi NPS vs Total Invoice per Staff</h2>
+    <p class="panel-sub">Rekap dikelompokkan per minggu berjalan (minggu 1 = tanggal 1&ndash;7, dst).</p>
+    <div class="week-tabs" id="weekTabs"></div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Nama Staff</th><th class="num">Total NPS</th><th class="num">Kontribusi</th><th class="num">Total Qty Invoice</th></tr>
+        </thead>
+        <tbody id="weeklyBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="daily-nps">
+    <h2>Target NPS Harian</h2>
+    <p class="panel-sub">Target: 4 NPS / hari &middot; 100 NPS / bulan.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tanggal</th><th class="num">Actual NPS</th><th class="num">Target</th><th>Status</th></tr></thead>
+        <tbody id="dailyNpsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="aksara">
+    <h2>Try On Aksara</h2>
+    <p class="panel-sub">Target: 6 try on / hari.</p>
+    <div class="cards-row" style="margin-bottom:16px;">
+      <div class="stat-card">
+        <div class="sc-label">Total Bulan Ini</div>
+        <div class="sc-value" id="aksaraMonthTotal">&mdash;</div>
+        <div class="sc-sub">akumulasi s/d akhir bulan</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Hari Ini</div>
+        <div class="sc-value" id="aksaraToday">&mdash;</div>
+        <div style="margin-top:8px;" id="aksaraTodayBadge"></div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tanggal</th><th class="num">Jumlah</th><th class="num">Target</th><th>Status</th><th>Nama yang Try On</th></tr></thead>
+        <tbody id="aksaraBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="samudra">
+    <h2>Try On Samudra</h2>
+    <p class="panel-sub">Minimal: 2 try on / hari.</p>
+    <div class="cards-row" style="margin-bottom:16px;">
+      <div class="stat-card">
+        <div class="sc-label">Total Bulan Ini</div>
+        <div class="sc-value" id="samudraMonthTotal">&mdash;</div>
+        <div class="sc-sub">akumulasi s/d akhir bulan</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Hari Ini</div>
+        <div class="sc-value" id="samudraToday">&mdash;</div>
+        <div style="margin-top:8px;" id="samudraTodayBadge"></div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tanggal</th><th class="num">Jumlah</th><th class="num">Min.</th><th>Status</th><th>Nama yang Try On</th></tr></thead>
+        <tbody id="samudraBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="credit">Data ditarik langsung dari Google Sheet Form_Responses &middot; END SHIFT M126<br>Dibuat oleh <strong>aceljenn</strong> (Jennifer)</footer>
+</div>
+
+<script>
+const SHEET_ID = '1OZaG1ufnzpTYJJM_98DVDHfUzpDDKrq6A0LIMsX1CAY';
+const GID = '916601268';
+const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
+
+const STAFF_LIST = ['Harti Fitrianingsih','Hartono','Rachel Jennifer Victoria','Fidiartiningsih','Firly Savira Oktaviandi','Abdul Rosyid Faqih','Arya Dwi Persada'];
+
+const TARGET_NPS_DAILY = 4;
+const TARGET_NPS_MONTHLY = 100;
+const TARGET_AKSARA_DAILY = 6;
+const TARGET_SAMUDRA_MIN = 2;
+
+const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+let allRows = [];
+let selectedMonthKey = null;
+let selectedWeek = 1;
+
+/* ---------- theme ---------- */
+function initTheme(){
+  let saved = 'light';
+  try{ saved = localStorage.getItem('esm126-theme') || 'light'; }catch(e){}
+  document.documentElement.setAttribute('data-theme', saved);
+  document.getElementById('themeToggle').textContent = saved === 'dark' ? '\u2600' : '\u263D';
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  const cur = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  document.getElementById('themeToggle').textContent = next === 'dark' ? '\u2600' : '\u263D';
+  try{ localStorage.setItem('esm126-theme', next); }catch(e){}
+});
+initTheme();
+
+/* ---------- helpers ---------- */
+function dayKey(d){ return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
+function monthKey(d){ return `${d.getFullYear()}-${d.getMonth()+1}`; }
+function weekOfMonth(d){ return Math.ceil(d.getDate()/7); }
+function fmtDate(d){ return d.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'}); }
+function fmtQty(n){ return Math.round(n||0).toLocaleString('id-ID'); }
+function parseNum(cell){
+  if(!cell) return 0;
+  if(typeof cell.v === 'number') return cell.v;
+  if(cell.v == null) return 0;
+  const s = String(cell.v).replace(/[^0-9.-]/g,'');
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : n;
+}
+function parseGvizDate(cell){
+  if(!cell || cell.v == null) return null;
+  const s = String(cell.v);
+  const m = s.match(/Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);
+  if(m){
+    return new Date(+m[1], +m[2], +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+  }
+  const parsed = new Date(s);
+  return isNaN(parsed) ? null : parsed;
+}
+function badge(ok, okText, badText){
+  return `<span class="badge dot ${ok?'ok':'bad'}">${ok?okText:badText}</span>`;
+}
+
+/* ---------- fetch ---------- */
+async function fetchSheetData(){
+  const banner = document.getElementById('errorBanner');
+  banner.style.display = 'none';
+  document.getElementById('subtitle').innerHTML = 'Tracking NPS, invoice, dan try on harian tim &middot; memuat data&hellip;';
+  try{
+    const res = await fetch(GVIZ_URL);
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    const json = JSON.parse(text.substring(start, end+1));
+    const cols = json.table.cols.map(c => (c.label||'').toLowerCase());
+    const idx = {
+      timestamp: cols.findIndex(c=>c.includes('timestamp')),
+      staff: cols.findIndex(c=>c.includes('nama staff') || c.includes('staff')),
+      invoice: cols.findIndex(c=>c.includes('invoice')),
+      nps: cols.findIndex(c=>c.includes('nps')),
+      aksara: cols.findIndex(c=>c.includes('aksara')),
+      samudra: cols.findIndex(c=>c.includes('samudra')),
+    };
+    allRows = json.table.rows.map(r=>{
+      const c = i => (i>=0 ? r.c[i] : null);
+      const d = parseGvizDate(c(idx.timestamp));
+      const staff = c(idx.staff) && c(idx.staff).v ? String(c(idx.staff).v).trim() : '';
+      return {
+        date: d,
+        staff,
+        invoice: parseNum(c(idx.invoice)),
+        nps: parseNum(c(idx.nps)),
+        aksara: parseNum(c(idx.aksara)),
+        samudra: parseNum(c(idx.samudra)),
+      };
+    }).filter(r => r.date && r.staff);
+
+    document.getElementById('subtitle').innerHTML =
+      `Tracking NPS, invoice, dan try on harian tim &middot; ${allRows.length} entri &middot; update terakhir ${new Date().toLocaleTimeString('id-ID')}`;
+
+    populateMonths();
+    renderAll();
+  }catch(err){
+    banner.style.display = 'block';
+    banner.textContent = 'Gagal mengambil data dari Google Sheet. Pastikan sheet sudah di-share dengan akses "Anyone with the link - Viewer", lalu klik Refresh. (' + err.message + ')';
+    document.getElementById('subtitle').textContent = 'Tracking NPS, invoice, dan try on harian tim';
+  }
+}
+
+function populateMonths(){
+  const sel = document.getElementById('monthSelect');
+  const now = new Date();
+  const currentKey = monthKey(now);
+  const keys = Array.from(new Set([...allRows.map(r=>monthKey(r.date)), currentKey]));
+  keys.sort((a,b)=>{
+    const [ay,am]=a.split('-').map(Number), [by,bm]=b.split('-').map(Number);
+    return ay===by ? am-bm : ay-by;
+  });
+  sel.innerHTML = keys.map(k=>{
+    const [y,m] = k.split('-').map(Number);
+    return `<option value="${k}">${MONTH_NAMES[m-1]} ${y}</option>`;
+  }).join('');
+  selectedMonthKey = currentKey;
+  sel.value = selectedMonthKey;
+}
+document.getElementById('monthSelect').addEventListener('change', (e)=>{
+  selectedMonthKey = e.target.value;
+  selectedWeek = 1;
+  renderAll();
+});
+document.getElementById('refreshBtn').addEventListener('click', fetchSheetData);
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+function csvEscape(v){
+  const s = String(v ?? '');
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+function exportCSV(){
+  if(!selectedMonthKey) return;
+  const monthRows = rowsForMonth(selectedMonthKey).slice().sort((a,b)=> a.date - b.date || a.staff.localeCompare(b.staff));
+  const [y,m] = selectedMonthKey.split('-').map(Number);
+  const rows = [];
+  rows.push(['Laporan END SHIFT M126', `${MONTH_NAMES[m-1]} ${y}`]);
+  rows.push(['Diexport oleh', 'aceljenn (Jennifer)']);
+  rows.push(['Tanggal export', new Date().toLocaleString('id-ID')]);
+  rows.push([]);
+  rows.push(['Tanggal','Nama Staff','Qty Invoice','Total NPS','Try On Aksara','Try On Samudra']);
+  monthRows.forEach(r=>{
+    rows.push([fmtDate(r.date), r.staff, r.invoice, r.nps, r.aksara, r.samudra]);
+  });
+  rows.push([]);
+  rows.push(['TOTAL BULAN INI', '',
+    monthRows.reduce((s,r)=>s+r.invoice,0),
+    monthRows.reduce((s,r)=>s+r.nps,0),
+    monthRows.reduce((s,r)=>s+r.aksara,0),
+    monthRows.reduce((s,r)=>s+r.samudra,0)
+  ]);
+  rows.push([]);
+  rows.push(['Target NPS Bulanan', TARGET_NPS_MONTHLY]);
+  rows.push(['Target NPS Harian', TARGET_NPS_DAILY]);
+  rows.push(['Target Try On Aksara Harian', TARGET_AKSARA_DAILY]);
+  rows.push(['Target Minimal Try On Samudra Harian', TARGET_SAMUDRA_MIN]);
+
+  const csvContent = '\uFEFF' + rows.map(r => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csvContent], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `EndShiftM126_${MONTH_NAMES[m-1]}_${y}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ---------- render ---------- */
+function rowsForMonth(key){
+  return allRows.filter(r => monthKey(r.date) === key);
+}
+
+function renderAll(){
+  if(!selectedMonthKey) return;
+  const monthRows = rowsForMonth(selectedMonthKey);
+  renderOverview(monthRows);
+  renderWeekly(monthRows);
+  renderDailyNps(monthRows);
+  renderTryOn(monthRows, 'aksara', TARGET_AKSARA_DAILY, true);
+  renderTryOn(monthRows, 'samudra', TARGET_SAMUDRA_MIN, false);
+}
+
+function renderOverview(monthRows){
+  const totalNps = monthRows.reduce((s,r)=>s+r.nps,0);
+  const totalInvoice = monthRows.reduce((s,r)=>s+r.invoice,0);
+  const pct = Math.min(100, (totalNps/TARGET_NPS_MONTHLY)*100);
+  document.getElementById('cardMonthNps').textContent = totalNps;
+  document.getElementById('cardMonthNpsBar').style.width = pct + '%';
+  const remaining = Math.max(0, TARGET_NPS_MONTHLY - totalNps);
+  document.getElementById('cardMonthNpsSub').textContent =
+    remaining > 0 ? `${totalNps} / ${TARGET_NPS_MONTHLY} — kurang ${remaining} NPS` : `${totalNps} / ${TARGET_NPS_MONTHLY} — target tercapai`;
+  document.getElementById('cardMonthInvoice').textContent = fmtQty(totalInvoice);
+
+  const today = new Date();
+  const todayRows = allRows.filter(r => dayKey(r.date) === dayKey(today));
+  const todayNps = todayRows.reduce((s,r)=>s+r.nps,0);
+  document.getElementById('cardTodayNps').textContent = todayNps;
+  document.getElementById('cardTodayBadge').innerHTML = badge(todayNps >= TARGET_NPS_DAILY, 'Tercapai', 'Tidak Tercapai');
+}
+
+function renderWeekly(monthRows){
+  const weeks = Array.from(new Set(monthRows.map(r=>weekOfMonth(r.date)))).sort((a,b)=>a-b);
+  if(weeks.length === 0) weeks.push(1);
+  if(!weeks.includes(selectedWeek)) selectedWeek = weeks[0];
+
+  const tabsEl = document.getElementById('weekTabs');
+  tabsEl.innerHTML = weeks.map(w=>`<button data-week="${w}" class="${w===selectedWeek?'active':''}">Minggu ${w}</button>`).join('');
+  tabsEl.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectedWeek = Number(btn.dataset.week);
+      const monthRowsNow = rowsForMonth(selectedMonthKey);
+      renderWeekly(monthRowsNow);
+    });
+  });
+
+  const weekRows = monthRows.filter(r => weekOfMonth(r.date) === selectedWeek);
+  const names = Array.from(new Set([...STAFF_LIST, ...weekRows.map(r=>r.staff)]));
+  const agg = names.map(name=>{
+    const rs = weekRows.filter(r=>r.staff === name);
+    return { name, nps: rs.reduce((s,r)=>s+r.nps,0), invoice: rs.reduce((s,r)=>s+r.invoice,0) };
+  }).sort((a,b)=>b.nps-a.nps);
+
+  const totalWeekNps = agg.reduce((s,a)=>s+a.nps,0);
+  const totalWeekInvoice = agg.reduce((s,a)=>s+a.invoice,0);
+
+  const body = document.getElementById('weeklyBody');
+  if(weekRows.length === 0 && agg.every(a=>a.nps===0 && a.invoice===0)){
+    body.innerHTML = `<tr><td colspan="4" class="empty-note">Belum ada data untuk minggu ini.</td></tr>`;
+    return;
+  }
+  body.innerHTML = agg.map(a=>{
+    const pct = totalWeekNps > 0 ? ((a.nps/totalWeekNps)*100).toFixed(0) : 0;
+    return `<tr><td>${a.name}</td><td class="num">${a.nps}</td><td class="num">${pct}%</td><td class="num">${fmtQty(a.invoice)}</td></tr>`;
+  }).join('') + `<tr class="total-row"><td>TOTAL MINGGU ${selectedWeek}</td><td class="num">${totalWeekNps}</td><td class="num">100%</td><td class="num">${fmtQty(totalWeekInvoice)}</td></tr>`;
+}
+
+function renderDailyNps(monthRows){
+  const dayKeys = Array.from(new Set(monthRows.map(r=>dayKey(r.date))));
+  const dates = dayKeys.map(k=>{
+    const [y,m,d] = k.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }).sort((a,b)=>a-b);
+
+  const body = document.getElementById('dailyNpsBody');
+  if(dates.length === 0){
+    body.innerHTML = `<tr><td colspan="4" class="empty-note">Belum ada data untuk bulan ini.</td></tr>`;
+    return;
+  }
+  body.innerHTML = dates.map(d=>{
+    const dayRows = monthRows.filter(r=>dayKey(r.date)===dayKey(d));
+    const actual = dayRows.reduce((s,r)=>s+r.nps,0);
+    const ok = actual >= TARGET_NPS_DAILY;
+    return `<tr><td>${fmtDate(d)}</td><td class="num">${actual}</td><td class="num">${TARGET_NPS_DAILY}</td><td>${badge(ok,'Tercapai','Tidak Tercapai')}</td></tr>`;
+  }).join('');
+}
+
+function renderTryOn(monthRows, field, target, isDailyTargetExact){
+  const dayKeys = Array.from(new Set(monthRows.map(r=>dayKey(r.date))));
+  const dates = dayKeys.map(k=>{
+    const [y,m,d] = k.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }).sort((a,b)=>a-b);
+
+  const monthTotal = monthRows.reduce((s,r)=>s+r[field],0);
+  document.getElementById(field+'MonthTotal').textContent = monthTotal;
+
+  const today = new Date();
+  const todayRows = allRows.filter(r => dayKey(r.date) === dayKey(today));
+  const todayTotal = todayRows.reduce((s,r)=>s+r[field],0);
+  document.getElementById(field+'Today').textContent = todayTotal;
+  document.getElementById(field+'TodayBadge').innerHTML = badge(todayTotal >= target, 'Tercapai', isDailyTargetExact ? 'Belum Tercapai' : 'Belum Tercapai');
+
+  const body = document.getElementById(field+'Body');
+  if(dates.length === 0){
+    body.innerHTML = `<tr><td colspan="5" class="empty-note">Belum ada data untuk bulan ini.</td></tr>`;
+    return;
+  }
+  body.innerHTML = dates.map(d=>{
+    const dayRows = monthRows.filter(r=>dayKey(r.date)===dayKey(d) && r[field] > 0);
+    const total = dayRows.reduce((s,r)=>s+r[field],0);
+    const ok = total >= target;
+    const names = dayRows.map(r=> r[field] > 1 ? `${r.staff} (${r[field]})` : r.staff).join(', ') || '&mdash;';
+    return `<tr><td>${fmtDate(d)}</td><td class="num">${total}</td><td class="num">${target}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td><td class="names">${names}</td></tr>`;
+  }).join('');
+}
+
+fetchSheetData();
+</script>
+</body>
+</html>
