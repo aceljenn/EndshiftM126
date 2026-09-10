@@ -237,7 +237,7 @@
     <p class="panel-sub">Target: 4 NPS / hari &middot; 100 NPS / bulan.</p>
     <div class="table-scroll">
       <table>
-        <thead><tr><th>Tanggal</th><th class="num">Actual NPS</th><th class="num">Target</th><th>Status</th></tr></thead>
+        <thead><tr><th>Tanggal</th><th class="num">Actual NPS</th><th class="num">Target NPS</th><th>Status</th><th class="num">Qty Invoice</th></tr></thead>
         <tbody id="dailyNpsBody"></tbody>
       </table>
     </div>
@@ -547,14 +547,15 @@ function renderDailyNps(monthRows){
 
   const body = document.getElementById('dailyNpsBody');
   if(dates.length === 0){
-    body.innerHTML = `<tr><td colspan="4" class="empty-note">Belum ada data untuk bulan ini.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="5" class="empty-note">Belum ada data untuk bulan ini.</td></tr>`;
     return;
   }
   body.innerHTML = dates.map(d=>{
     const dayRows = monthRows.filter(r=>dayKey(r.date)===dayKey(d));
     const actual = dayRows.reduce((s,r)=>s+r.nps,0);
+    const invoiceQty = dayRows.reduce((s,r)=>s+r.invoice,0);
     const ok = actual >= TARGET_NPS_DAILY;
-    return `<tr><td>${fmtDate(d)}</td><td class="num">${actual}</td><td class="num">${TARGET_NPS_DAILY}</td><td>${badge(ok,'Tercapai','Tidak Tercapai')}</td></tr>`;
+    return `<tr><td>${fmtDate(d)}</td><td class="num">${actual}</td><td class="num">${TARGET_NPS_DAILY}</td><td>${badge(ok,'Tercapai','Tidak Tercapai')}</td><td class="num">${fmtQty(invoiceQty)}</td></tr>`;
   }).join('');
 }
 
