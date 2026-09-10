@@ -369,6 +369,7 @@ async function fetchSheetData(){
     const cols = json.table.cols.map(c => (c.label||'').toLowerCase());
     const idx = {
       timestamp: cols.findIndex(c=>c.includes('timestamp')),
+      tanggal: cols.findIndex(c=>c === 'tanggal' || (c.includes('tanggal') && !c.includes('timestamp'))),
       staff: cols.findIndex(c=>c.includes('nama staff') || c.includes('staff')),
       invoice: cols.findIndex(c=>c.includes('invoice')),
       nps: cols.findIndex(c=>c.includes('nps')),
@@ -377,7 +378,8 @@ async function fetchSheetData(){
     };
     allRows = json.table.rows.map(r=>{
       const c = i => (i>=0 ? r.c[i] : null);
-      const d = parseGvizDate(c(idx.timestamp));
+      const tanggalCell = c(idx.tanggal);
+      const d = (tanggalCell ? parseGvizDate(tanggalCell) : null) || parseGvizDate(c(idx.timestamp));
       const staff = c(idx.staff) && c(idx.staff).v ? String(c(idx.staff).v).trim() : '';
       return {
         date: d,
