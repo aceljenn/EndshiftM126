@@ -397,6 +397,13 @@ const HISTORICAL_BACKFILL_RAW = [
   {date:[2026,8,6], staff:'Firly Savira Oktaviandi', newmember:1},
   {date:[2026,8,7], staff:'Harti Fitrianingsih', nps:1},
   {date:[2026,8,7], staff:'Firly Savira Oktaviandi', nps:1, newmember:1},
+  {date:[2026,8,4], staff:'Arya Dwi Persada', iphone15:1},
+  {date:[2026,8,4], staff:'Abdul Rosyid Faqih', macbookneo:1},
+  {date:[2026,8,6], staff:'Rachel Jennifer Victoria', macbookneo:1},
+  {date:[2026,8,7], staff:'Arya Dwi Persada', ipada16:1},
+  {date:[2026,8,7], staff:'Firly Savira Oktaviandi', iphone15:1},
+  {date:[2026,8,9], staff:'Harti Fitrianingsih', iphone15:1},
+  {date:[2026,8,9], staff:'Fidiartiningsih', iphone15:1},
 ];
 
 const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -505,6 +512,7 @@ async function fetchSheetData(){
     const backfill = HISTORICAL_BACKFILL_RAW.map(p => makeRow({
       date: new Date(p.date[0], p.date[1], p.date[2]),
       staff: p.staff, nps: p.nps, newmember: p.newmember,
+      iphone15: p.iphone15, ipada16: p.ipada16, macbookneo: p.macbookneo, watchse3: p.watchse3,
     }));
     allRows = [...backfill, ...allRows];
 
