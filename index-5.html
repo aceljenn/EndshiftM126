@@ -895,6 +895,96 @@ function renderNewMember(monthRows){
   }).join('');
 }
 
+function renderHome(monthRows){
+  const today = new Date();
+  const todayRows = allRows.filter(r => dayKey(r.date) === dayKey(today));
+
+  const totalNps = monthRows.reduce((s,r)=>s+r.nps,0);
+  const todayNps = todayRows.reduce((s,r)=>s+r.nps,0);
+
+  const totalInvoice = monthRows.reduce((s,r)=>s+r.invoice,0);
+  const todayInvoice = todayRows.reduce((s,r)=>s+r.invoice,0);
+
+  const deviceTotal = DEVICE_KEYS.reduce((s,k)=>s+monthRows.reduce((s2,r)=>s2+r[k],0),0);
+  const deviceTarget = DEVICE_KEYS.reduce((s,k)=>s+DEVICE_TARGETS[k].monthlyTotal,0);
+  const deviceWeekTotal = DEVICE_KEYS.reduce((s,k)=>s+monthRows.filter(r=>weekOfMonth(r.date)===weekOfMonth(today)).reduce((s2,r)=>s2+r[k],0),0);
+
+  const nmTotal = monthRows.reduce((s,r)=>s+r.newmember,0);
+  const nmToday = todayRows.reduce((s,r)=>s+r.newmember,0);
+
+  const aksaraTotal = monthRows.reduce((s,r)=>s+r.aksara,0);
+  const aksaraToday = todayRows.reduce((s,r)=>s+r.aksara,0);
+
+  const samudraTotal = monthRows.reduce((s,r)=>s+r.samudra,0);
+  const samudraToday = todayRows.reduce((s,r)=>s+r.samudra,0);
+
+  const cards = [
+    {
+      icon:'&#127919;', title:'NPS', view:'daily-nps',
+      rows:[
+        ['Bulan Ini', `${totalNps} / ${TARGET_NPS_MONTHLY}`],
+        ['Hari Ini', `${todayNps} / ${TARGET_NPS_DAILY}`],
+      ],
+      ok: todayNps >= TARGET_NPS_DAILY,
+    },
+    {
+      icon:'&#129534;', title:'Qty Invoice', view:'weekly',
+      rows:[
+        ['Bulan Ini', fmtQty(totalInvoice)],
+        ['Hari Ini', fmtQty(todayInvoice)],
+      ],
+      ok: null,
+    },
+    {
+      icon:'&#128241;', title:'Fokus Device', view:'device',
+      rows:[
+        ['Bulan Ini', `${deviceTotal} / ${deviceTarget} unit`],
+        ['Minggu Ini', `${deviceWeekTotal} unit`],
+      ],
+      ok: deviceTotal >= deviceTarget,
+    },
+    {
+      icon:'&#129309;', title:'New Member', view:'newmember',
+      rows:[
+        ['Bulan Ini', nmTotal],
+        ['Hari Ini', `${nmToday} / ${TARGET_NEWMEMBER_DAILY}`],
+      ],
+      ok: nmToday >= TARGET_NEWMEMBER_DAILY,
+    },
+    {
+      icon:'&#128090;', title:'Try On Aksara', view:'aksara',
+      rows:[
+        ['Bulan Ini', aksaraTotal],
+        ['Hari Ini', `${aksaraToday} / ${TARGET_AKSARA_DAILY}`],
+      ],
+      ok: aksaraToday >= TARGET_AKSARA_DAILY,
+    },
+    {
+      icon:'&#127754;', title:'Try On Samudra', view:'samudra',
+      rows:[
+        ['Bulan Ini', samudraTotal],
+        ['Hari Ini', `${samudraToday} / min. ${TARGET_SAMUDRA_MIN}`],
+      ],
+      ok: samudraToday >= TARGET_SAMUDRA_MIN,
+    },
+  ];
+
+  const grid = document.getElementById('homeGrid');
+  grid.innerHTML = cards.map(c => `
+    <div class="big-card" data-view="${c.view}">
+      <div class="bc-head">
+        <span class="bc-icon">${c.icon}</span>
+        <span class="bc-title">${c.title}</span>
+      </div>
+      ${c.rows.map(r=>`<div class="bc-row"><span class="bc-label">${r[0]}</span><span class="bc-val">${r[1]}</span></div>`).join('')}
+      ${c.ok===null ? '' : `<div style="margin-top:10px;">${badge(c.ok,'Tercapai','Belum Tercapai')}</div>`}
+    </div>
+  `).join('');
+  grid.querySelectorAll('.big-card').forEach(card=>{
+    card.addEventListener('click', ()=> showView(card.dataset.view));
+  });
+}
+
 fetchSheetData();
 </script>
 </body>
