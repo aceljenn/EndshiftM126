@@ -192,6 +192,8 @@
     <a href="#overview">Overview</a>
     <a href="#weekly">Rekap Mingguan</a>
     <a href="#daily-nps">Target NPS Harian</a>
+    <a href="#device">Fokus Device</a>
+    <a href="#newmember">New Member</a>
     <a href="#aksara">Try On Aksara</a>
     <a href="#samudra">Try On Samudra</a>
   </nav>
@@ -239,6 +241,67 @@
       <table>
         <thead><tr><th>Tanggal</th><th class="num">Actual NPS</th><th class="num">Target NPS</th><th>Status</th><th class="num">Qty Invoice</th></tr></thead>
         <tbody id="dailyNpsBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="device">
+    <h2>Fokus Jualan Device</h2>
+    <p class="panel-sub">Target per staff/minggu: iPhone 15: 2 unit &middot; iPad A16: 1 unit &middot; MacBook Neo: 1 unit &middot; Watch SE 3: 2 unit / 2 minggu. Target total per bulan: iPhone 15: 56 &middot; iPad A16: 28 &middot; MacBook Neo: 28 &middot; Watch SE 3: 28 unit (seluruh staff).</p>
+
+    <div class="cards-row" id="deviceMonthCards" style="margin-bottom:20px;"></div>
+
+    <h3 style="font-size:14px; margin:0 0 10px;">Target per Staff &mdash; Bulan Ini</h3>
+    <div class="table-scroll" style="margin-bottom:24px;">
+      <table>
+        <thead>
+          <tr><th>Nama Staff</th><th class="num">iPhone 15</th><th>Status</th><th class="num">iPad A16</th><th>Status</th><th class="num">MacBook Neo</th><th>Status</th><th class="num">Watch SE 3</th><th>Status</th></tr>
+        </thead>
+        <tbody id="deviceStaffBody"></tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px; margin:0 0 4px;">Progress Mingguan per Staff</h3>
+    <p class="panel-sub" style="margin-top:0;">Target per minggu: iPhone 15: 2 &middot; iPad A16: 1 &middot; MacBook Neo: 1 &middot; Watch SE 3: rata-rata 1/minggu (target asli 2 unit tiap 2 minggu).</p>
+    <div class="week-tabs" id="deviceWeekTabs"></div>
+    <div class="table-scroll" style="margin-bottom:24px;">
+      <table>
+        <thead>
+          <tr><th>Nama Staff</th><th class="num">iPhone 15</th><th>Status</th><th class="num">iPad A16</th><th>Status</th><th class="num">MacBook Neo</th><th>Status</th><th class="num">Watch SE 3</th><th>Status</th></tr>
+        </thead>
+        <tbody id="deviceWeeklyBody"></tbody>
+      </table>
+    </div>
+
+    <h3 style="font-size:14px; margin:0 0 4px;">Log Aktivitas Harian</h3>
+    <p class="panel-sub" style="margin-top:0;">Target device ditetapkan per minggu/bulan (bukan per hari) &mdash; log ini untuk memantau transaksi tiap hari.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tanggal</th><th>Nama Staff</th><th class="num">iPhone 15</th><th class="num">iPad A16</th><th class="num">MacBook Neo</th><th class="num">Watch SE 3</th></tr></thead>
+        <tbody id="deviceLogBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="newmember">
+    <h2>New Member</h2>
+    <p class="panel-sub">Target: 2 new member / hari.</p>
+    <div class="cards-row" style="margin-bottom:16px;">
+      <div class="stat-card">
+        <div class="sc-label">Total Bulan Ini</div>
+        <div class="sc-value" id="nmMonthTotal">&mdash;</div>
+        <div class="sc-sub">akumulasi s/d akhir bulan</div>
+      </div>
+      <div class="stat-card">
+        <div class="sc-label">Hari Ini</div>
+        <div class="sc-value" id="nmToday">&mdash;</div>
+        <div style="margin-top:8px;" id="nmTodayBadge"></div>
+      </div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Tanggal</th><th class="num">Actual</th><th class="num">Target</th><th>Status</th><th>Kontribusi Staff</th></tr></thead>
+        <tbody id="nmBody"></tbody>
       </table>
     </div>
   </section>
@@ -303,12 +366,45 @@ const TARGET_NPS_DAILY = 4;
 const TARGET_NPS_MONTHLY = 100;
 const TARGET_AKSARA_DAILY = 6;
 const TARGET_SAMUDRA_MIN = 2;
+const TARGET_NEWMEMBER_DAILY = 2;
+
+const DEVICE_TARGETS = {
+  iphone15:   { label:'iPhone 15',   weekly:2, monthlyPerStaff:8, monthlyTotal:56 },
+  ipada16:    { label:'iPad A16',    weekly:1, monthlyPerStaff:4, monthlyTotal:28 },
+  macbookneo: { label:'MacBook Neo', weekly:1, monthlyPerStaff:4, monthlyTotal:28 },
+  watchse3:   { label:'Watch SE 3',  weekly:1, monthlyPerStaff:4, monthlyTotal:28 },
+};
+const DEVICE_KEYS = ['iphone15','ipada16','macbookneo','watchse3'];
+
+/* Backfill kegiatan 1-7 Sept 2026 yang belum sempat diinput staff sebelum dashboard mulai jalan
+   tanggal 9. Karena tanggalnya sudah fixed (bukan bulan berjalan), data ini otomatis hanya
+   berlaku untuk bulan September 2026 dan tidak akan ikut ke bulan-bulan berikutnya. */
+const HISTORICAL_BACKFILL_RAW = [
+  {date:[2026,8,1], staff:'Arya Dwi Persada', nps:1},
+  {date:[2026,8,2], staff:'Harti Fitrianingsih', nps:1},
+  {date:[2026,8,2], staff:'Abdul Rosyid Faqih', nps:1},
+  {date:[2026,8,2], staff:'Fidiartiningsih', nps:1},
+  {date:[2026,8,3], staff:'Fidiartiningsih', nps:1},
+  {date:[2026,8,4], staff:'Abdul Rosyid Faqih', nps:1, newmember:1},
+  {date:[2026,8,4], staff:'Fidiartiningsih', newmember:1},
+  {date:[2026,8,4], staff:'Harti Fitrianingsih', newmember:1},
+  {date:[2026,8,5], staff:'Arya Dwi Persada', nps:1},
+  {date:[2026,8,5], staff:'Harti Fitrianingsih', nps:2},
+  {date:[2026,8,5], staff:'Fidiartiningsih', nps:2},
+  {date:[2026,8,5], staff:'Firly Savira Oktaviandi', nps:1},
+  {date:[2026,8,6], staff:'Abdul Rosyid Faqih', nps:1, newmember:1},
+  {date:[2026,8,6], staff:'Rachel Jennifer Victoria', nps:1},
+  {date:[2026,8,6], staff:'Firly Savira Oktaviandi', newmember:1},
+  {date:[2026,8,7], staff:'Harti Fitrianingsih', nps:1},
+  {date:[2026,8,7], staff:'Firly Savira Oktaviandi', nps:1, newmember:1},
+];
 
 const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
 let allRows = [];
 let selectedMonthKey = null;
 let selectedWeek = 1;
+let selectedDeviceWeek = 1;
 
 /* ---------- theme ---------- */
 function initTheme(){
@@ -353,6 +449,14 @@ function parseGvizDate(cell){
 function badge(ok, okText, badText){
   return `<span class="badge dot ${ok?'ok':'bad'}">${ok?okText:badText}</span>`;
 }
+function makeRow(p){
+  return {
+    date: p.date, staff: p.staff,
+    invoice: p.invoice||0, nps: p.nps||0, aksara: p.aksara||0, samudra: p.samudra||0,
+    newmember: p.newmember||0,
+    iphone15: p.iphone15||0, ipada16: p.ipada16||0, macbookneo: p.macbookneo||0, watchse3: p.watchse3||0,
+  };
+}
 
 /* ---------- fetch ---------- */
 async function fetchSheetData(){
@@ -375,21 +479,34 @@ async function fetchSheetData(){
       nps: cols.findIndex(c=>c.includes('nps')),
       aksara: cols.findIndex(c=>c.includes('aksara')),
       samudra: cols.findIndex(c=>c.includes('samudra')),
+      iphone15: cols.findIndex(c=>c.includes('iphone')),
+      ipada16: cols.findIndex(c=>c.includes('ipad')),
+      macbookneo: cols.findIndex(c=>c.includes('macbook')),
+      watchse3: cols.findIndex(c=>c.includes('watch')),
+      newmember: cols.findIndex(c=>c.includes('total new member')) >= 0
+                 ? cols.findIndex(c=>c.includes('total new member'))
+                 : cols.findIndex(c=>c.includes('new member')),
     };
     allRows = json.table.rows.map(r=>{
       const c = i => (i>=0 ? r.c[i] : null);
       const tanggalCell = c(idx.tanggal);
       const d = (tanggalCell ? parseGvizDate(tanggalCell) : null) || parseGvizDate(c(idx.timestamp));
       const staff = c(idx.staff) && c(idx.staff).v ? String(c(idx.staff).v).trim() : '';
-      return {
-        date: d,
-        staff,
-        invoice: parseNum(c(idx.invoice)),
-        nps: parseNum(c(idx.nps)),
-        aksara: parseNum(c(idx.aksara)),
-        samudra: parseNum(c(idx.samudra)),
-      };
+      return makeRow({
+        date: d, staff,
+        invoice: parseNum(c(idx.invoice)), nps: parseNum(c(idx.nps)),
+        aksara: parseNum(c(idx.aksara)), samudra: parseNum(c(idx.samudra)),
+        newmember: parseNum(c(idx.newmember)),
+        iphone15: parseNum(c(idx.iphone15)), ipada16: parseNum(c(idx.ipada16)),
+        macbookneo: parseNum(c(idx.macbookneo)), watchse3: parseNum(c(idx.watchse3)),
+      });
     }).filter(r => r.date && r.staff);
+
+    const backfill = HISTORICAL_BACKFILL_RAW.map(p => makeRow({
+      date: new Date(p.date[0], p.date[1], p.date[2]),
+      staff: p.staff, nps: p.nps, newmember: p.newmember,
+    }));
+    allRows = [...backfill, ...allRows];
 
     document.getElementById('subtitle').innerHTML =
       `Tracking NPS, invoice, dan try on harian tim &middot; ${allRows.length} entri &middot; update terakhir ${new Date().toLocaleTimeString('id-ID')}`;
@@ -480,6 +597,8 @@ function renderAll(){
   renderOverview(monthRows);
   renderWeekly(monthRows);
   renderDailyNps(monthRows);
+  renderDevice(monthRows);
+  renderNewMember(monthRows);
   renderTryOn(monthRows, 'aksara', TARGET_AKSARA_DAILY, true);
   renderTryOn(monthRows, 'samudra', TARGET_SAMUDRA_MIN, false);
 }
@@ -586,6 +705,104 @@ function renderTryOn(monthRows, field, target, isDailyTargetExact){
     const ok = total >= target;
     const names = dayRows.map(r=> r[field] > 1 ? `${r.staff} (${r[field]})` : r.staff).join(', ') || '&mdash;';
     return `<tr><td>${fmtDate(d)}</td><td class="num">${total}</td><td class="num">${target}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td><td class="names">${names}</td></tr>`;
+  }).join('');
+}
+
+function renderDevice(monthRows){
+  const names = Array.from(new Set([...STAFF_LIST, ...monthRows.map(r=>r.staff)]));
+
+  /* overview cards */
+  const cardsEl = document.getElementById('deviceMonthCards');
+  cardsEl.innerHTML = DEVICE_KEYS.map(key=>{
+    const cfg = DEVICE_TARGETS[key];
+    const total = monthRows.reduce((s,r)=>s+r[key],0);
+    const ok = total >= cfg.monthlyTotal;
+    return `<div class="stat-card">
+      <div class="sc-label">${cfg.label} Bulan Ini</div>
+      <div class="sc-value">${total} <span style="font-size:14px; color:var(--text-muted); font-weight:600;">/ ${cfg.monthlyTotal}</span></div>
+      <div style="margin-top:8px;">${badge(ok,'Tercapai','Belum Tercapai')}</div>
+    </div>`;
+  }).join('');
+
+  /* per-staff monthly table */
+  const staffBody = document.getElementById('deviceStaffBody');
+  staffBody.innerHTML = names.map(name=>{
+    const rs = monthRows.filter(r=>r.staff===name);
+    const cells = DEVICE_KEYS.map(key=>{
+      const total = rs.reduce((s,r)=>s+r[key],0);
+      const ok = total >= DEVICE_TARGETS[key].monthlyPerStaff;
+      return `<td class="num">${total} / ${DEVICE_TARGETS[key].monthlyPerStaff}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td>`;
+    }).join('');
+    return `<tr><td>${name}</td>${cells}</tr>`;
+  }).join('');
+
+  /* weekly tabs + table */
+  const weeks = Array.from(new Set(monthRows.map(r=>weekOfMonth(r.date)))).sort((a,b)=>a-b);
+  if(weeks.length===0) weeks.push(1);
+  if(!weeks.includes(selectedDeviceWeek)) selectedDeviceWeek = weeks[0];
+  const tabsEl = document.getElementById('deviceWeekTabs');
+  tabsEl.innerHTML = weeks.map(w=>`<button data-week="${w}" class="${w===selectedDeviceWeek?'active':''}">Minggu ${w}</button>`).join('');
+  tabsEl.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectedDeviceWeek = Number(btn.dataset.week);
+      renderDevice(rowsForMonth(selectedMonthKey));
+    });
+  });
+  const weekRows = monthRows.filter(r=>weekOfMonth(r.date)===selectedDeviceWeek);
+  const weeklyBody = document.getElementById('deviceWeeklyBody');
+  const weeklyNames = Array.from(new Set([...STAFF_LIST, ...weekRows.map(r=>r.staff)]));
+  weeklyBody.innerHTML = weeklyNames.map(name=>{
+    const rs = weekRows.filter(r=>r.staff===name);
+    const cells = DEVICE_KEYS.map(key=>{
+      const total = rs.reduce((s,r)=>s+r[key],0);
+      const ok = total >= DEVICE_TARGETS[key].weekly;
+      return `<td class="num">${total} / ${DEVICE_TARGETS[key].weekly}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td>`;
+    }).join('');
+    return `<tr><td>${name}</td>${cells}</tr>`;
+  }).join('');
+
+  /* daily activity log */
+  const logBody = document.getElementById('deviceLogBody');
+  const logRows = monthRows
+    .filter(r => r.iphone15>0 || r.ipada16>0 || r.macbookneo>0 || r.watchse3>0)
+    .slice()
+    .sort((a,b)=> b.date - a.date);
+  if(logRows.length===0){
+    logBody.innerHTML = `<tr><td colspan="6" class="empty-note">Belum ada penjualan device tercatat bulan ini.</td></tr>`;
+  }else{
+    logBody.innerHTML = logRows.map(r=>
+      `<tr><td>${fmtDate(r.date)}</td><td>${r.staff}</td><td class="num">${r.iphone15||'-'}</td><td class="num">${r.ipada16||'-'}</td><td class="num">${r.macbookneo||'-'}</td><td class="num">${r.watchse3||'-'}</td></tr>`
+    ).join('');
+  }
+}
+
+function renderNewMember(monthRows){
+  const monthTotal = monthRows.reduce((s,r)=>s+r.newmember,0);
+  document.getElementById('nmMonthTotal').textContent = monthTotal;
+
+  const today = new Date();
+  const todayRows = allRows.filter(r => dayKey(r.date) === dayKey(today));
+  const todayTotal = todayRows.reduce((s,r)=>s+r.newmember,0);
+  document.getElementById('nmToday').textContent = todayTotal;
+  document.getElementById('nmTodayBadge').innerHTML = badge(todayTotal >= TARGET_NEWMEMBER_DAILY, 'Tercapai', 'Belum Tercapai');
+
+  const dayKeys = Array.from(new Set(monthRows.map(r=>dayKey(r.date))));
+  const dates = dayKeys.map(k=>{
+    const [y,m,d] = k.split('-').map(Number);
+    return new Date(y, m-1, d);
+  }).sort((a,b)=>a-b);
+
+  const body = document.getElementById('nmBody');
+  if(dates.length === 0){
+    body.innerHTML = `<tr><td colspan="5" class="empty-note">Belum ada data untuk bulan ini.</td></tr>`;
+    return;
+  }
+  body.innerHTML = dates.map(d=>{
+    const dayRows = monthRows.filter(r=>dayKey(r.date)===dayKey(d) && r.newmember > 0);
+    const total = dayRows.reduce((s,r)=>s+r.newmember,0);
+    const ok = total >= TARGET_NEWMEMBER_DAILY;
+    const names = dayRows.map(r=> r.newmember > 1 ? `${r.staff} (${r.newmember})` : r.staff).join(', ') || '&mdash;';
+    return `<tr><td>${fmtDate(d)}</td><td class="num">${total}</td><td class="num">${TARGET_NEWMEMBER_DAILY}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td><td class="names">${names}</td></tr>`;
   }).join('');
 }
 
