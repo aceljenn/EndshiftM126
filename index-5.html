@@ -50,7 +50,50 @@
     -webkit-font-smoothing:antialiased;
     transition: background .2s ease, color .2s ease;
   }
-  .wrap{max-width:1180px; margin:0 auto; padding:22px 20px 64px;}
+  .app-layout{display:flex; align-items:flex-start; max-width:1440px; margin:0 auto;}
+  .sidebar{
+    width:240px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border);
+    min-height:100vh; padding:18px 12px; position:sticky; top:0; align-self:flex-start;
+  }
+  .sidebar .brand{font-size:14.5px; font-weight:800; padding:6px 10px 14px; border-bottom:1px solid var(--border); margin-bottom:10px;}
+  .side-title{font-size:10.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-muted); font-weight:700; margin:16px 10px 6px;}
+  .side-link{
+    display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px;
+    text-decoration:none; color:var(--text); font-size:13px; font-weight:600; margin-bottom:2px;
+    cursor:pointer; border:1px solid transparent; background:none; width:100%; text-align:left; font-family:inherit;
+  }
+  .side-link:hover{background:var(--surface-alt);}
+  .side-link.active{background:var(--orange-bg); color:var(--orange-strong); border-color:var(--orange);}
+  .side-icon{font-size:15px; width:18px; text-align:center; flex-shrink:0;}
+  .main-content{flex:1; min-width:0; padding:20px 24px 64px;}
+  .view{display:none;}
+  .view.active{display:block;}
+  @media (max-width:860px){
+    .app-layout{flex-direction:column;}
+    .sidebar{
+      width:100%; position:relative; min-height:auto; border-right:none; border-bottom:1px solid var(--border);
+      display:flex; flex-wrap:nowrap; overflow-x:auto; gap:6px; padding:10px 12px;
+    }
+    .sidebar .brand, .sidebar .side-title{display:none;}
+    .side-link{flex:0 0 auto; white-space:nowrap;}
+  }
+
+  /* home big cards */
+  .home-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media (max-width:1000px){.home-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:620px){.home-grid{grid-template-columns:1fr;}}
+  .big-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px;
+    box-shadow:var(--shadow); cursor:pointer; transition:transform .15s ease, border-color .15s ease;
+  }
+  .big-card:hover{border-color:var(--orange); transform:translateY(-2px);}
+  .big-card .bc-head{display:flex; align-items:center; gap:10px; margin-bottom:14px;}
+  .big-card .bc-icon{font-size:24px; line-height:1;}
+  .big-card .bc-title{font-size:15px; font-weight:800;}
+  .big-card .bc-row{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:7px 0; border-top:1px dashed var(--border);}
+  .big-card .bc-row:first-of-type{border-top:none;}
+  .big-card .bc-label{color:var(--text-muted);}
+  .big-card .bc-val{font-weight:700;}
 
   /* header */
   header{
@@ -158,49 +201,45 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="app-layout">
 
-  <header>
-    <div class="title-block">
-      <h1>END SHIFT M126</h1>
-      <p id="subtitle">Tracking NPS, invoice, dan try on harian tim &middot; memuat data&hellip;</p>
-      <p style="margin:2px 0 0; font-size:11.5px; color:var(--text-muted);">by <strong style="color:var(--orange-strong);">aceljenn</strong> (Jennifer)</p>
-    </div>
-    <div class="header-controls">
-      <select id="monthSelect"></select>
-      <button class="btn" id="exportBtn" title="Export laporan bulan ini ke CSV">&#8681; Export CSV</button>
-      <button class="btn" id="refreshBtn" title="Ambil ulang data dari sheet">&#8635; Refresh</button>
-      <button class="icon-btn" id="themeToggle" title="Ganti tampilan">&#9789;</button>
-    </div>
-  </header>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">END SHIFT M126</div>
+    <div class="side-title" style="margin-top:0;">Menu</div>
+    <button class="side-link active" data-view="home"><span class="side-icon">&#127968;</span> Beranda</button>
+    <button class="side-link" data-view="weekly"><span class="side-icon">&#128202;</span> Rekap Mingguan</button>
+    <button class="side-link" data-view="daily-nps"><span class="side-icon">&#127919;</span> Target NPS Harian</button>
+    <button class="side-link" data-view="device"><span class="side-icon">&#128241;</span> Fokus Device</button>
+    <button class="side-link" data-view="newmember"><span class="side-icon">&#129309;</span> New Member</button>
+    <button class="side-link" data-view="aksara"><span class="side-icon">&#128090;</span> Try On Aksara</button>
+    <button class="side-link" data-view="samudra"><span class="side-icon">&#127754;</span> Try On Samudra</button>
 
-  <div class="cards-row" style="margin-bottom:14px;">
-    <div class="links-card" style="grid-column:1/-1; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px;">
-      <div>
-        <div class="lc-title" style="margin-bottom:2px;">Isi Form</div>
-        <div style="font-size:12.5px; color:var(--text-muted);">Klik untuk langsung masuk ke halaman pengisian</div>
+    <div class="side-title">Isi Form</div>
+    <a class="side-link" href="https://docs.google.com/forms/d/e/1FAIpQLSckv5jybuadbmja0zvLqJXvWLPufpTUOCHrkLrU-3Ho9nZDJA/viewform" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> Try On Aksara</a>
+    <a class="side-link" href="https://docs.google.com/forms/d/e/1FAIpQLSdDj3fPWA5_tZ7xBcjEhb8hMn0DAQ5Ok_joASUjwStYUjC5Ow/viewform" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> Try On Samudra</a>
+    <a class="side-link" href="https://forms.gle/7tDiXjE5j6dxmNLu8" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> End Shift M126</a>
+  </aside>
+
+  <div class="main-content">
+
+    <header>
+      <div class="title-block">
+        <h1 id="pageTitle">Beranda</h1>
+        <p id="subtitle">Tracking NPS, invoice, dan try on harian tim &middot; memuat data&hellip;</p>
+        <p style="margin:2px 0 0; font-size:11.5px; color:var(--text-muted);">by <strong style="color:var(--orange-strong);">aceljenn</strong> (Jennifer)</p>
       </div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap;">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSckv5jybuadbmja0zvLqJXvWLPufpTUOCHrkLrU-3Ho9nZDJA/viewform" target="_blank" rel="noopener" style="background:var(--orange-bg); color:var(--orange-strong);">Try On Aksara <span class="arrow">&rarr;</span></a>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdDj3fPWA5_tZ7xBcjEhb8hMn0DAQ5Ok_joASUjwStYUjC5Ow/viewform" target="_blank" rel="noopener" style="background:var(--orange-bg); color:var(--orange-strong);">Try On Samudra <span class="arrow">&rarr;</span></a>
-        <a href="https://forms.gle/7tDiXjE5j6dxmNLu8" target="_blank" rel="noopener" style="background:var(--green-bg); color:var(--green);">End Shift M126 <span class="arrow">&rarr;</span></a>
+      <div class="header-controls">
+        <select id="monthSelect"></select>
+        <button class="btn" id="exportBtn" title="Export laporan bulan ini ke CSV">&#8681; Export CSV</button>
+        <button class="btn" id="refreshBtn" title="Ambil ulang data dari sheet">&#8635; Refresh</button>
+        <button class="icon-btn" id="themeToggle" title="Ganti tampilan">&#9789;</button>
       </div>
-    </div>
-  </div>
+    </header>
 
-  <nav class="section-nav">
-    <a href="#overview">Overview</a>
-    <a href="#weekly">Rekap Mingguan</a>
-    <a href="#daily-nps">Target NPS Harian</a>
-    <a href="#device">Fokus Device</a>
-    <a href="#newmember">New Member</a>
-    <a href="#aksara">Try On Aksara</a>
-    <a href="#samudra">Try On Samudra</a>
-  </nav>
+    <div class="status-banner" id="errorBanner"></div>
 
-  <div class="status-banner" id="errorBanner"></div>
-
-  <div id="overview" class="cards-row">
+    <div id="view-home" class="view active">
+  <div id="overview" class="cards-row" style="margin-bottom:18px;">
     <div class="stat-card">
       <div class="sc-label">NPS Bulan Ini</div>
       <div class="sc-value" id="cardMonthNps">&mdash;</div>
@@ -219,6 +258,10 @@
       <div class="sc-sub" id="cardMonthInvoiceSub">akumulasi seluruh staff</div>
     </div>
   </div>
+      <div class="home-grid" id="homeGrid"></div>
+    </div>
+
+    <div id="view-weekly" class="view">
 
   <section class="panel" id="weekly">
     <h2>Kontribusi NPS vs Total Invoice per Staff</h2>
@@ -233,7 +276,9 @@
       </table>
     </div>
   </section>
+    </div>
 
+    <div id="view-daily-nps" class="view">
   <section class="panel" id="daily-nps">
     <h2>Target NPS Harian</h2>
     <p class="panel-sub">Target: 4 NPS / hari &middot; 100 NPS / bulan.</p>
@@ -244,7 +289,9 @@
       </table>
     </div>
   </section>
+    </div>
 
+    <div id="view-device" class="view">
   <section class="panel" id="device">
     <h2>Fokus Jualan Device</h2>
     <p class="panel-sub">Target per staff/minggu: iPhone 15: 2 unit &middot; iPad A16: 1 unit &middot; MacBook Neo: 1 unit &middot; Watch SE 3: 2 unit / 2 minggu. Target total per bulan: iPhone 15: 56 &middot; iPad A16: 28 &middot; MacBook Neo: 28 &middot; Watch SE 3: 28 unit (seluruh staff).</p>
@@ -282,7 +329,9 @@
       </table>
     </div>
   </section>
+    </div>
 
+    <div id="view-newmember" class="view">
   <section class="panel" id="newmember">
     <h2>New Member</h2>
     <p class="panel-sub">Target: 2 new member / hari.</p>
@@ -305,7 +354,9 @@
       </table>
     </div>
   </section>
+    </div>
 
+    <div id="view-aksara" class="view">
   <section class="panel" id="aksara">
     <h2>Try On Aksara</h2>
     <p class="panel-sub">Target: 6 try on / hari.</p>
@@ -328,7 +379,9 @@
       </table>
     </div>
   </section>
+    </div>
 
+    <div id="view-samudra" class="view">
   <section class="panel" id="samudra">
     <h2>Try On Samudra</h2>
     <p class="panel-sub">Minimal: 2 try on / hari.</p>
@@ -351,8 +404,10 @@
       </table>
     </div>
   </section>
+    </div>
 
-  <footer class="credit">Data ditarik langsung dari Google Sheet Form_Responses &middot; END SHIFT M126<br>Dibuat oleh <strong>aceljenn</strong> (Jennifer)</footer>
+    <footer class="credit">Data ditarik langsung dari Google Sheet Form_Responses &middot; END SHIFT M126<br>Dibuat oleh <strong>aceljenn</strong> (Jennifer)</footer>
+  </div>
 </div>
 
 <script>
@@ -428,6 +483,31 @@ document.getElementById('themeToggle').addEventListener('click', ()=>{
   try{ localStorage.setItem('esm126-theme', next); }catch(e){}
 });
 initTheme();
+
+/* ---------- view switching (sidebar) ---------- */
+const VIEW_TITLES = {
+  'home':'Beranda',
+  'weekly':'Rekap Mingguan',
+  'daily-nps':'Target NPS Harian',
+  'device':'Fokus Device',
+  'newmember':'New Member',
+  'aksara':'Try On Aksara',
+  'samudra':'Try On Samudra',
+};
+function showView(name){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const target = document.getElementById('view-'+name);
+  if(target) target.classList.add('active');
+  document.querySelectorAll('.side-link[data-view]').forEach(a=>{
+    a.classList.toggle('active', a.dataset.view === name);
+  });
+  document.getElementById('pageTitle').textContent = VIEW_TITLES[name] || 'Beranda';
+  document.querySelector('.main-content').scrollTo({top:0, behavior:'smooth'});
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.querySelectorAll('.side-link[data-view]').forEach(btn=>{
+  btn.addEventListener('click', ()=> showView(btn.dataset.view));
+});
 
 /* ---------- helpers ---------- */
 function dayKey(d){ return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; }
@@ -603,6 +683,7 @@ function renderAll(){
   if(!selectedMonthKey) return;
   const monthRows = rowsForMonth(selectedMonthKey);
   renderOverview(monthRows);
+  renderHome(monthRows);
   renderWeekly(monthRows);
   renderDailyNps(monthRows);
   renderDevice(monthRows);
