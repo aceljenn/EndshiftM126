@@ -213,6 +213,9 @@
     <button class="side-link" data-view="newmember"><span class="side-icon">&#129309;</span> New Member</button>
     <button class="side-link" data-view="aksara"><span class="side-icon">&#127774;</span> Try On Aksara</button>
     <button class="side-link" data-view="samudra"><span class="side-icon">&#127754;</span> Try On Samudra</button>
+    <button class="side-link" data-view="staffprofile"><span class="side-icon">&#128100;</span> Profil Staff</button>
+    <button class="side-link" data-view="champion"><span class="side-icon">&#127942;</span> LOB Champion</button>
+    <button class="side-link" data-view="activitylog"><span class="side-icon">&#128203;</span> Log Aktivitas</button>
 
     <div class="side-title">Isi Form</div>
     <a class="side-link" href="https://docs.google.com/forms/d/e/1FAIpQLSckv5jybuadbmja0zvLqJXvWLPufpTUOCHrkLrU-3Ho9nZDJA/viewform" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> Try On Aksara</a>
@@ -406,6 +409,54 @@
   </section>
     </div>
 
+    <div id="view-staffprofile" class="view">
+      <section class="panel">
+        <h2>Profil Staff</h2>
+        <p class="panel-sub">Ringkasan lengkap aktivitas satu staff untuk bulan yang dipilih di atas.</p>
+        <select id="staffProfileSelect" style="margin-bottom:18px;"></select>
+
+        <div class="cards-row" id="staffProfileCards" style="margin-bottom:20px;"></div>
+
+        <h3 style="font-size:14px; margin:0 0 10px;">Detail Fokus Device</h3>
+        <div class="table-scroll" style="margin-bottom:22px;">
+          <table>
+            <thead><tr><th>Produk</th><th class="num">Actual</th><th class="num">Target/Bulan</th><th>Status</th></tr></thead>
+            <tbody id="staffProfileDeviceBody"></tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size:14px; margin:0 0 10px;">Aktivitas Harian</h3>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Tanggal</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th><th class="num">iPhone 15</th><th class="num">iPad A16</th><th class="num">MacBook Neo</th><th class="num">Watch SE 3</th></tr></thead>
+            <tbody id="staffProfileLogBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <div id="view-champion" class="view">
+      <section class="panel">
+        <h2>LOB Champion</h2>
+        <p class="panel-sub">PIC penanggung jawab tiap fokus produk, beserta pencapaian mereka di kategori masing-masing bulan ini.</p>
+        <div class="cards-row" id="championCards"></div>
+      </section>
+    </div>
+
+    <div id="view-activitylog" class="view">
+      <section class="panel">
+        <h2>Log Aktivitas</h2>
+        <p class="panel-sub">Semua submission form pada bulan yang dipilih, untuk memantau staff mana yang sudah input.</p>
+        <select id="activityLogFilter" style="margin-bottom:18px;"></select>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Tanggal</th><th>Nama Staff</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th><th class="num">iPhone 15</th><th class="num">iPad A16</th><th class="num">MacBook Neo</th><th class="num">Watch SE 3</th></tr></thead>
+            <tbody id="activityLogBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
     <footer class="credit">Data ditarik langsung dari Google Sheet Form_Responses &middot; END SHIFT M126<br>Dibuat oleh <strong>aceljenn</strong> (Jennifer)</footer>
   </div>
 </div>
@@ -430,6 +481,13 @@ const DEVICE_TARGETS = {
   watchse3:   { label:'Watch SE 3',  weekly:2, monthlyPerStaff:8, monthlyTotal:56 },
 };
 const DEVICE_KEYS = ['iphone15','ipada16','macbookneo','watchse3'];
+
+const LOB_CHAMPIONS = {
+  'Arya Dwi Persada': 'watchse3',
+  'Abdul Rosyid Faqih': 'macbookneo',
+  'Firly Savira Oktaviandi': 'ipada16',
+  'Fidiartiningsih': 'iphone15',
+};
 
 /* Backfill kegiatan 1-7 Sept 2026 yang belum sempat diinput staff sebelum dashboard mulai jalan
    tanggal 9. Karena tanggalnya sudah fixed (bukan bulan berjalan), data ini otomatis hanya
@@ -467,6 +525,8 @@ let allRows = [];
 let selectedMonthKey = null;
 let selectedWeek = 1;
 let selectedDeviceWeek = 1;
+let selectedProfileStaff = null;
+let selectedLogStaff = 'ALL';
 
 /* ---------- theme ---------- */
 function initTheme(){
@@ -493,6 +553,9 @@ const VIEW_TITLES = {
   'newmember':'New Member',
   'aksara':'Try On Aksara',
   'samudra':'Try On Samudra',
+  'staffprofile':'Profil Staff',
+  'champion':'LOB Champion',
+  'activitylog':'Log Aktivitas',
 };
 function showView(name){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
@@ -690,6 +753,9 @@ function renderAll(){
   renderNewMember(monthRows);
   renderTryOn(monthRows, 'aksara', TARGET_AKSARA_DAILY, true);
   renderTryOn(monthRows, 'samudra', TARGET_SAMUDRA_MIN, false);
+  renderStaffProfile(monthRows);
+  renderChampion(monthRows);
+  renderActivityLog(monthRows);
 }
 
 function renderOverview(monthRows){
@@ -983,6 +1049,108 @@ function renderHome(monthRows){
   grid.querySelectorAll('.big-card').forEach(card=>{
     card.addEventListener('click', ()=> showView(card.dataset.view));
   });
+}
+
+function renderStaffProfile(monthRows){
+  const names = Array.from(new Set([...STAFF_LIST, ...allRows.map(r=>r.staff)])).sort();
+  const sel = document.getElementById('staffProfileSelect');
+  if(sel.dataset.filled !== '1' || sel.options.length !== names.length){
+    sel.innerHTML = names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    sel.dataset.filled = '1';
+    if(!selectedProfileStaff || !names.includes(selectedProfileStaff)) selectedProfileStaff = names[0];
+    sel.value = selectedProfileStaff;
+    sel.addEventListener('change', ()=>{
+      selectedProfileStaff = sel.value;
+      renderStaffProfile(rowsForMonth(selectedMonthKey));
+    });
+  }
+  if(!selectedProfileStaff) return;
+
+  const rs = monthRows.filter(r=>r.staff===selectedProfileStaff);
+  const totalNps = rs.reduce((s,r)=>s+r.nps,0);
+  const totalInvoice = rs.reduce((s,r)=>s+r.invoice,0);
+  const totalNewMember = rs.reduce((s,r)=>s+r.newmember,0);
+  const totalAksara = rs.reduce((s,r)=>s+r.aksara,0);
+  const totalSamudra = rs.reduce((s,r)=>s+r.samudra,0);
+
+  const cardsEl = document.getElementById('staffProfileCards');
+  const champKey = LOB_CHAMPIONS[selectedProfileStaff];
+  let champHtml = '';
+  if(champKey){
+    const cfg = DEVICE_TARGETS[champKey];
+    const champTotal = rs.reduce((s,r)=>s+r[champKey],0);
+    const champOk = champTotal >= cfg.monthlyPerStaff;
+    champHtml = `<div class="stat-card" style="grid-column:1/-1; border-color:var(--orange); background:var(--orange-bg);">
+      <div class="sc-label" style="color:var(--orange-strong);">&#127942; LOB Champion &mdash; ${cfg.label}</div>
+      <div class="sc-value">${champTotal} <span style="font-size:14px; color:var(--text-muted); font-weight:600;">/ ${cfg.monthlyPerStaff} unit bulan ini</span></div>
+      <div style="margin-top:8px;">${badge(champOk,'Tercapai','Belum Tercapai')}</div>
+    </div>`;
+  }
+  cardsEl.innerHTML = champHtml + `
+    <div class="stat-card"><div class="sc-label">Total NPS</div><div class="sc-value">${totalNps}</div><div class="sc-sub">kontribusi bulan ini</div></div>
+    <div class="stat-card"><div class="sc-label">Total Qty Invoice</div><div class="sc-value">${fmtQty(totalInvoice)}</div><div class="sc-sub">bulan ini</div></div>
+    <div class="stat-card"><div class="sc-label">Total New Member</div><div class="sc-value">${totalNewMember}</div><div class="sc-sub">bulan ini</div></div>
+    <div class="stat-card"><div class="sc-label">Try On Aksara / Samudra</div><div class="sc-value">${totalAksara} / ${totalSamudra}</div><div class="sc-sub">bulan ini</div></div>
+  `;
+
+  const deviceBody = document.getElementById('staffProfileDeviceBody');
+  deviceBody.innerHTML = DEVICE_KEYS.map(key=>{
+    const cfg = DEVICE_TARGETS[key];
+    const total = rs.reduce((s,r)=>s+r[key],0);
+    const ok = total >= cfg.monthlyPerStaff;
+    return `<tr><td>${cfg.label}</td><td class="num">${total}</td><td class="num">${cfg.monthlyPerStaff}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td></tr>`;
+  }).join('');
+
+  const logBody = document.getElementById('staffProfileLogBody');
+  const sorted = rs.slice().sort((a,b)=> b.date - a.date);
+  if(sorted.length === 0){
+    logBody.innerHTML = `<tr><td colspan="10" class="empty-note">Belum ada aktivitas tercatat bulan ini.</td></tr>`;
+  }else{
+    logBody.innerHTML = sorted.map(r=>
+      `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td><td class="num">${r.iphone15}</td><td class="num">${r.ipada16}</td><td class="num">${r.macbookneo}</td><td class="num">${r.watchse3}</td></tr>`
+    ).join('');
+  }
+}
+
+function renderChampion(monthRows){
+  const cardsEl = document.getElementById('championCards');
+  cardsEl.innerHTML = Object.entries(LOB_CHAMPIONS).map(([staff, key])=>{
+    const cfg = DEVICE_TARGETS[key];
+    const total = monthRows.filter(r=>r.staff===staff).reduce((s,r)=>s+r[key],0);
+    const ok = total >= cfg.monthlyPerStaff;
+    return `<div class="stat-card">
+      <div class="sc-label">${cfg.label}</div>
+      <div class="sc-value" style="font-size:20px;">${staff}</div>
+      <div class="sc-sub">${total} / ${cfg.monthlyPerStaff} unit bulan ini</div>
+      <div style="margin-top:8px;">${badge(ok,'Tercapai','Belum Tercapai')}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderActivityLog(monthRows){
+  const names = Array.from(new Set([...STAFF_LIST, ...allRows.map(r=>r.staff)])).sort();
+  const sel = document.getElementById('activityLogFilter');
+  if(sel.dataset.filled !== '1'){
+    sel.innerHTML = `<option value="ALL">Semua Staff</option>` + names.map(n=>`<option value="${n}">${n}</option>`).join('');
+    sel.dataset.filled = '1';
+    sel.value = selectedLogStaff;
+    sel.addEventListener('change', ()=>{
+      selectedLogStaff = sel.value;
+      renderActivityLog(rowsForMonth(selectedMonthKey));
+    });
+  }
+
+  const filtered = (selectedLogStaff === 'ALL' ? monthRows : monthRows.filter(r=>r.staff===selectedLogStaff))
+    .slice().sort((a,b)=> b.date - a.date);
+
+  const body = document.getElementById('activityLogBody');
+  if(filtered.length === 0){
+    body.innerHTML = `<tr><td colspan="11" class="empty-note">Belum ada submission form untuk bulan/filter ini.</td></tr>`;
+    return;
+  }
+  body.innerHTML = filtered.map(r=>
+    `<tr><td>${fmtDate(r.date)}</td><td>${r.staff}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td><td class="num">${r.iphone15}</td><td class="num">${r.ipada16}</td><td class="num">${r.macbookneo}</td><td class="num">${r.watchse3}</td></tr>`
+  ).join('');
 }
 
 fetchSheetData();
