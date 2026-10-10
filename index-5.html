@@ -1530,7 +1530,8 @@ document.getElementById('deviceLogList').addEventListener('click', (e)=>{
 
 /* ---------- mode trainer (PIN) ---------- */
 /* PIN default: 481926 -> ganti lewat menu "Ganti PIN trainer" di panel, lalu ganti kode di bawah ini */
-const TRAINER_PIN_HASH = '72126e8f371e6eacaedcb1458fc9e0dac0d53f00dc4f92fdea203fb774394f85';
+const TRAINER_PIN_HASH = '
+8aa2812830440b2cd2566d6409fe095670aa40f901cb88248adee17cb5e55b1a';
 
 async function hashPin(pin){
   const data = new TextEncoder().encode('esm126:' + pin);
