@@ -23,6 +23,8 @@
     --red-bg:#FBEAE6;
     --shadow: 0 1px 2px rgba(20,20,18,0.04), 0 1px 12px rgba(20,20,18,0.03);
     --radius: 10px;
+    --blue:#2F63C7; --blue-bg:#E6EEFB;
+    --purple:#7A45C9; --purple-bg:#F0E8FB;
   }
   [data-theme="dark"]{
     --bg:#15171A;
@@ -39,6 +41,8 @@
     --red:#FF6B54;
     --red-bg:rgba(255,107,84,0.14);
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 12px rgba(0,0,0,0.25);
+    --blue:#7DA8FF; --blue-bg:rgba(125,168,255,0.14);
+    --purple:#B896FF; --purple-bg:rgba(184,150,255,0.14);
   }
   *{box-sizing:border-box;}
   body{
@@ -94,6 +98,54 @@
   .big-card .bc-row:first-of-type{border-top:none;}
   .big-card .bc-label{color:var(--text-muted);}
   .big-card .bc-val{font-weight:700;}
+
+  /* filters + interactive log */
+  .filter-bar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px;}
+  .chip-btn{
+    font-family:inherit; font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:20px;
+    border:1px solid var(--border); background:var(--surface-alt); color:var(--text-muted); cursor:pointer;
+  }
+  .chip-btn:hover{border-color:var(--orange); color:var(--orange-strong);}
+  .chip-btn.active{background:var(--orange); border-color:var(--orange); color:#fff;}
+  .mini-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px;}
+  @media (max-width:620px){.mini-stats{grid-template-columns:repeat(2,1fr);}}
+  .mini-stat{background:var(--surface-alt); border-radius:10px; padding:10px 12px;}
+  .mini-stat .ms-l{font-size:11.5px; color:var(--text-muted); font-weight:600;}
+  .mini-stat .ms-v{font-size:20px; font-weight:800;}
+  .day-group{border:1px solid var(--border); border-radius:10px; margin-bottom:10px; overflow:hidden; background:var(--surface);}
+  .day-head{
+    display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;
+    padding:10px 14px; background:var(--surface-alt); cursor:pointer; font-weight:700; font-size:13.5px; user-select:none;
+  }
+  .day-head::after{content:'\25BE'; color:var(--text-muted); margin-left:8px;}
+  .day-group.collapsed .day-head::after{content:'\25B8';}
+  .day-head .dh-meta{font-weight:600; color:var(--text-muted); font-size:12.5px; margin-left:auto;}
+  .day-body{padding:4px 14px;}
+  .day-group.collapsed .day-body{display:none;}
+  .entry{display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px dashed var(--border); flex-wrap:wrap;}
+  .entry:first-child{border-top:none;}
+  .entry-name{font-size:13.5px; font-weight:600; min-width:170px;}
+  .entry-date{font-size:13px; font-weight:600; min-width:110px; color:var(--text-muted);}
+  .avatar{
+    width:28px; height:28px; border-radius:50%; background:var(--orange-bg); color:var(--orange-strong);
+    display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; flex-shrink:0;
+    text-transform:uppercase;
+  }
+  .pill{display:inline-flex; align-items:center; padding:3px 10px; border-radius:14px; font-size:12px; font-weight:700; margin:1px 2px 1px 0;}
+  .p-iphone15{background:var(--orange-bg); color:var(--orange-strong);}
+  .p-ipada16{background:var(--green-bg); color:var(--green);}
+  .p-macbookneo{background:var(--blue-bg); color:var(--blue);}
+  .p-watchse3{background:var(--purple-bg); color:var(--purple);}
+
+  /* missing input panel */
+  .chip-date{display:inline-block; font-size:11.5px; padding:2px 8px; border-radius:12px; background:var(--red-bg); color:var(--red); margin:2px 4px 2px 0; font-weight:600;}
+  .btn-sm{font-size:12px; padding:5px 10px; margin-right:4px;}
+  .btn-wa{background:#25D366; border-color:#25D366; color:#fff;}
+  .ok-note{background:var(--green-bg); color:var(--green); border-radius:8px; padding:12px 14px; font-weight:700; font-size:13.5px;}
+  textarea.msg-box{
+    width:100%; min-height:150px; font-family:inherit; font-size:13px; padding:10px 12px; border-radius:8px;
+    border:1px solid var(--border); background:var(--surface-alt); color:var(--text); resize:vertical; margin:8px 0 10px;
+  }
 
   /* header */
   header{
@@ -262,6 +314,12 @@
     </div>
   </div>
       <div class="home-grid" id="homeGrid"></div>
+
+      <section class="panel" id="missingPanel" style="margin-top:22px;">
+        <h2>Staff Belum Input Form</h2>
+        <p class="panel-sub" id="missingSub">Memuat&hellip;</p>
+        <div id="missingBody"></div>
+      </section>
     </div>
 
     <div id="view-weekly" class="view">
@@ -323,14 +381,30 @@
       </table>
     </div>
 
-    <h3 style="font-size:14px; margin:0 0 4px;">Log Aktivitas Harian</h3>
-    <p class="panel-sub" style="margin-top:0;">Target device ditetapkan per minggu/bulan (bukan per hari) &mdash; log ini untuk memantau transaksi tiap hari.</p>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>Tanggal</th><th>Nama Staff</th><th class="num">iPhone 15</th><th class="num">iPad A16</th><th class="num">MacBook Neo</th><th class="num">Watch SE 3</th></tr></thead>
-        <tbody id="deviceLogBody"></tbody>
-      </table>
+    <h3 style="font-size:14px; margin:0 0 4px;">Log Penjualan Device</h3>
+    <p class="panel-sub" style="margin-top:0;">Filter berdasarkan produk atau staff, pilih tampilan per hari / per staff, dan klik judul grup untuk buka-tutup.</p>
+
+    <div class="filter-bar" id="deviceLogFilters">
+      <button class="chip-btn active" data-product="ALL">Semua Produk</button>
+      <button class="chip-btn" data-product="iphone15">iPhone 15</button>
+      <button class="chip-btn" data-product="ipada16">iPad A16</button>
+      <button class="chip-btn" data-product="macbookneo">MacBook Neo</button>
+      <button class="chip-btn" data-product="watchse3">Watch SE 3</button>
     </div>
+    <div class="filter-bar">
+      <select id="deviceLogStaff"></select>
+      <span id="deviceLogModes" style="display:flex; gap:6px;">
+        <button class="chip-btn active" data-mode="day">Per Hari</button>
+        <button class="chip-btn" data-mode="staff">Per Staff</button>
+      </span>
+      <span id="deviceLogCollapse" style="display:flex; gap:6px; margin-left:auto;">
+        <button class="chip-btn" data-collapse="0">Buka semua</button>
+        <button class="chip-btn" data-collapse="1">Tutup semua</button>
+      </span>
+    </div>
+
+    <div class="mini-stats" id="deviceLogSummary"></div>
+    <div id="deviceLogList"></div>
   </section>
     </div>
 
@@ -601,7 +675,7 @@ function badge(ok, okText, badText){
 }
 function makeRow(p){
   return {
-    date: p.date, staff: p.staff,
+    date: p.date, staff: p.staff, backfill: !!p.backfill,
     invoice: p.invoice||0, nps: p.nps||0, aksara: p.aksara||0, samudra: p.samudra||0,
     newmember: p.newmember||0,
     iphone15: p.iphone15||0, ipada16: p.ipada16||0, macbookneo: p.macbookneo||0, watchse3: p.watchse3||0,
@@ -654,7 +728,7 @@ async function fetchSheetData(){
 
     const backfill = HISTORICAL_BACKFILL_RAW.map(p => makeRow({
       date: new Date(p.date[0], p.date[1], p.date[2]),
-      staff: p.staff, nps: p.nps, newmember: p.newmember,
+      staff: p.staff, nps: p.nps, newmember: p.newmember, backfill: true,
       iphone15: p.iphone15, ipada16: p.ipada16, macbookneo: p.macbookneo, watchse3: p.watchse3,
     }));
     allRows = [...backfill, ...allRows];
@@ -747,6 +821,7 @@ function renderAll(){
   const monthRows = rowsForMonth(selectedMonthKey);
   renderOverview(monthRows);
   renderHome(monthRows);
+  renderMissingInput();
   renderWeekly(monthRows);
   renderDailyNps(monthRows);
   renderDevice(monthRows);
@@ -916,19 +991,8 @@ function renderDevice(monthRows){
     return `<tr><td>${name}</td>${cells}</tr>`;
   }).join('');
 
-  /* daily activity log */
-  const logBody = document.getElementById('deviceLogBody');
-  const logRows = monthRows
-    .filter(r => r.iphone15>0 || r.ipada16>0 || r.macbookneo>0 || r.watchse3>0)
-    .slice()
-    .sort((a,b)=> b.date - a.date);
-  if(logRows.length===0){
-    logBody.innerHTML = `<tr><td colspan="6" class="empty-note">Belum ada penjualan device tercatat bulan ini.</td></tr>`;
-  }else{
-    logBody.innerHTML = logRows.map(r=>
-      `<tr><td>${fmtDate(r.date)}</td><td>${r.staff}</td><td class="num">${r.iphone15||'-'}</td><td class="num">${r.ipada16||'-'}</td><td class="num">${r.macbookneo||'-'}</td><td class="num">${r.watchse3||'-'}</td></tr>`
-    ).join('');
-  }
+  /* interactive sales log */
+  renderDeviceLog(monthRows);
 }
 
 function renderNewMember(monthRows){
@@ -1152,6 +1216,284 @@ function renderActivityLog(monthRows){
     `<tr><td>${fmtDate(r.date)}</td><td>${r.staff}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td><td class="num">${r.iphone15}</td><td class="num">${r.ipada16}</td><td class="num">${r.macbookneo}</td><td class="num">${r.watchse3}</td></tr>`
   ).join('');
 }
+
+/* ---------- util baru ---------- */
+function esc(v){
+  return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function initials(name){
+  const p = String(name).trim().split(/\s+/);
+  return ((p[0]||'')[0]||'') + ((p[1]||'')[0]||'');
+}
+function shortDate(d){ return d.toLocaleDateString('id-ID', {day:'numeric', month:'short'}); }
+function normName(v){ return String(v||'').trim().toLowerCase().replace(/\s+/g,' '); }
+function fallbackCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){}
+  document.body.removeChild(ta);
+}
+function copyText(text){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    return navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));
+  }
+  fallbackCopy(text);
+  return Promise.resolve();
+}
+
+/* ---------- staff belum input ---------- */
+const FORM_ENDSHIFT_URL = 'https://forms.gle/7tDiXjE5j6dxmNLu8';
+let lastMissing = null;
+
+function computeMissingInputs(key){
+  const [y,m] = key.split('-').map(Number);
+  /* hanya submission asli dari form (data backfill manual tidak dihitung) */
+  const real = allRows.filter(r => !r.backfill && monthKey(r.date) === key);
+  const info = { start:null, end:null, items:[], noData:false, tooEarly:false };
+  if(real.length === 0){ info.noData = true; return info; }
+
+  const monthStart = new Date(y, m-1, 1);
+  const monthEnd = new Date(y, m, 0);
+  const firstReal = real.reduce((min,r)=> r.date < min ? r.date : min, real[0].date);
+  const firstDay = new Date(firstReal.getFullYear(), firstReal.getMonth(), firstReal.getDate());
+  const now = new Date();
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate()-1);
+
+  const start = firstDay > monthStart ? firstDay : monthStart;
+  const end = yesterday < monthEnd ? yesterday : monthEnd;
+  info.start = start; info.end = end;
+  if(end < start){ info.tooEarly = true; return info; }
+
+  const submitted = new Set(real.map(r => normName(r.staff) + '|' + dayKey(r.date)));
+  const perStaff = STAFF_LIST.map(name => ({ name, dates: [] }));
+  for(let d = new Date(start); d <= end; d = new Date(d.getFullYear(), d.getMonth(), d.getDate()+1)){
+    perStaff.forEach(st=>{
+      if(!submitted.has(normName(st.name) + '|' + dayKey(d))) st.dates.push(new Date(d));
+    });
+  }
+  info.items = perStaff.filter(st => st.dates.length > 0)
+                       .sort((a,b)=> b.dates.length - a.dates.length || a.name.localeCompare(b.name));
+  return info;
+}
+
+function buildMissingMessages(info){
+  const range = `${shortDate(info.start)} \u2013 ${shortDate(info.end)} ${info.end.getFullYear()}`;
+  const all = ['*REMINDER INPUT END SHIFT M126*', `Periode: ${range}`, '', 'Staff yang belum input form End Shift:'];
+  info.items.forEach((it,i)=>{
+    it.msg = [
+      `Halo ${it.name} \u{1F44B}`,
+      `Berdasarkan rekap dashboard END SHIFT M126, kamu belum input form End Shift selama *${it.dates.length} hari*: ${it.dates.map(shortDate).join(', ')}.`,
+      '',
+      'Mohon segera dilengkapi ya \u{1F64F}',
+      `Isi form: ${FORM_ENDSHIFT_URL}`,
+    ].join('\n');
+    all.push(`${i+1}. ${it.name} \u2013 ${it.dates.length} hari (${it.dates.map(shortDate).join(', ')})`);
+  });
+  all.push('', 'Mohon segera dilengkapi ya \u{1F64F}', `Isi form: ${FORM_ENDSHIFT_URL}`);
+  info.allMsg = all.join('\n');
+}
+
+function renderMissingInput(){
+  const sub = document.getElementById('missingSub');
+  const body = document.getElementById('missingBody');
+  if(!selectedMonthKey) return;
+  const info = computeMissingInputs(selectedMonthKey);
+  lastMissing = info;
+
+  if(info.noData){
+    sub.textContent = 'Belum ada data input form di bulan ini.';
+    body.innerHTML = '';
+    return;
+  }
+  if(info.tooEarly){
+    sub.textContent = 'Belum ada hari yang bisa dicek (hari ini belum dihitung, menunggu staff input).';
+    body.innerHTML = '';
+    return;
+  }
+  sub.textContent = `Dicek dari ${fmtDate(info.start)} sampai ${fmtDate(info.end)} \u00B7 hari ini belum dihitung \u00B7 hari libur staff belum dikecualikan.`;
+
+  if(info.items.length === 0){
+    body.innerHTML = `<div class="ok-note">&#9989; Semua staff sudah input form di setiap hari pada periode ini.</div>`;
+    return;
+  }
+  buildMissingMessages(info);
+
+  const rows = info.items.map((it,i)=>`
+    <tr>
+      <td>${esc(it.name)}</td>
+      <td class="num"><span class="badge dot bad">${it.dates.length} hari</span></td>
+      <td>${it.dates.map(d=>`<span class="chip-date">${shortDate(d)}</span>`).join('')}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-wa" data-act="wa-one" data-i="${i}">WhatsApp</button>
+        <button class="btn btn-sm" data-act="copy-one" data-i="${i}">Salin</button>
+      </td>
+    </tr>`).join('');
+
+  body.innerHTML = `
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Nama Staff</th><th class="num">Tidak Input</th><th>Tanggal</th><th>Kirim Pengingat</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <h3 style="font-size:14px; margin:20px 0 0;">Template pesan untuk semua (grup WhatsApp)</h3>
+    <textarea class="msg-box" readonly>${esc(info.allMsg)}</textarea>
+    <button class="btn btn-sm btn-wa" data-act="wa-all">Kirim ke WhatsApp</button>
+    <button class="btn btn-sm" data-act="copy-all">Salin pesan</button>`;
+}
+
+document.getElementById('missingBody').addEventListener('click', (e)=>{
+  const btn = e.target.closest('button[data-act]');
+  if(!btn || !lastMissing) return;
+  const act = btn.dataset.act;
+  const msg = act.endsWith('-all') ? lastMissing.allMsg : (lastMissing.items[Number(btn.dataset.i)] || {}).msg;
+  if(!msg) return;
+  if(act.startsWith('wa')){
+    window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+  }else{
+    copyText(msg).then(()=>{
+      const old = btn.textContent;
+      btn.textContent = 'Tersalin \u2713';
+      setTimeout(()=>{ btn.textContent = old; }, 1500);
+    });
+  }
+});
+
+/* ---------- log penjualan device (interaktif) ---------- */
+let deviceLogProduct = 'ALL';
+let deviceLogStaff = 'ALL';
+let deviceLogMode = 'day';
+
+function pillsHtml(entry, keys){
+  return keys.filter(k=>entry[k] > 0)
+             .map(k=>`<span class="pill p-${k}">${DEVICE_TARGETS[k].label} &times;${entry[k]}</span>`).join('');
+}
+
+function renderDeviceLog(monthRows){
+  const sel = document.getElementById('deviceLogStaff');
+  const names = Array.from(new Set([...STAFF_LIST, ...monthRows.map(r=>r.staff)])).sort();
+  const namesKey = names.join('|');
+  if(sel.dataset.key !== namesKey){
+    sel.innerHTML = '<option value="ALL">Semua Staff</option>' + names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join('');
+    sel.dataset.key = namesKey;
+  }
+  sel.value = deviceLogStaff;
+
+  document.querySelectorAll('#deviceLogFilters button[data-product]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.product === deviceLogProduct);
+  });
+  document.querySelectorAll('#deviceLogModes button[data-mode]').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode === deviceLogMode);
+  });
+
+  const keys = deviceLogProduct === 'ALL' ? DEVICE_KEYS : [deviceLogProduct];
+
+  /* gabungkan beberapa input staff yang sama di hari yang sama */
+  const map = new Map();
+  monthRows.forEach(r=>{
+    if(deviceLogStaff !== 'ALL' && r.staff !== deviceLogStaff) return;
+    if(!keys.some(k=>r[k] > 0)) return;
+    const id = r.staff + '|' + dayKey(r.date);
+    if(!map.has(id)){
+      map.set(id, { date: new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate()), staff: r.staff, iphone15:0, ipada16:0, macbookneo:0, watchse3:0 });
+    }
+    const e = map.get(id);
+    DEVICE_KEYS.forEach(k=>{ e[k] += r[k]; });
+  });
+  const entries = Array.from(map.values());
+
+  const unitsOf = e => keys.reduce((s,k)=>s+e[k],0);
+  const totalUnits = entries.reduce((s,e)=>s+unitsOf(e),0);
+  const activeDays = new Set(entries.map(e=>dayKey(e.date))).size;
+  const activeStaff = new Set(entries.map(e=>e.staff)).size;
+
+  document.getElementById('deviceLogSummary').innerHTML = `
+    <div class="mini-stat"><div class="ms-l">Total Unit</div><div class="ms-v">${totalUnits}</div></div>
+    <div class="mini-stat"><div class="ms-l">Entri Input</div><div class="ms-v">${entries.length}</div></div>
+    <div class="mini-stat"><div class="ms-l">Hari Aktif</div><div class="ms-v">${activeDays}</div></div>
+    <div class="mini-stat"><div class="ms-l">Staff Aktif</div><div class="ms-v">${activeStaff}</div></div>`;
+
+  const list = document.getElementById('deviceLogList');
+  if(entries.length === 0){
+    list.innerHTML = `<div class="empty-note">Tidak ada penjualan device yang cocok dengan filter ini.</div>`;
+    return;
+  }
+
+  if(deviceLogMode === 'day'){
+    const groups = new Map();
+    entries.forEach(e=>{
+      const k = dayKey(e.date);
+      if(!groups.has(k)) groups.set(k, { date:e.date, items:[] });
+      groups.get(k).items.push(e);
+    });
+    list.innerHTML = Array.from(groups.values()).sort((a,b)=>b.date-a.date).map(g=>{
+      const units = g.items.reduce((s,e)=>s+unitsOf(e),0);
+      const label = g.date.toLocaleDateString('id-ID', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+      const rows = g.items.sort((a,b)=>a.staff.localeCompare(b.staff)).map(e=>`
+        <div class="entry">
+          <span class="avatar">${esc(initials(e.staff))}</span>
+          <span class="entry-name">${esc(e.staff)}</span>
+          <span>${pillsHtml(e, keys)}</span>
+        </div>`).join('');
+      return `<div class="day-group">
+        <div class="day-head"><span>${label}</span><span class="dh-meta">${units} unit &middot; ${g.items.length} staff</span></div>
+        <div class="day-body">${rows}</div>
+      </div>`;
+    }).join('');
+  }else{
+    const groups = new Map();
+    entries.forEach(e=>{
+      if(!groups.has(e.staff)) groups.set(e.staff, { staff:e.staff, items:[], totals:{iphone15:0, ipada16:0, macbookneo:0, watchse3:0} });
+      const g = groups.get(e.staff);
+      g.items.push(e);
+      DEVICE_KEYS.forEach(k=>{ g.totals[k] += e[k]; });
+    });
+    list.innerHTML = Array.from(groups.values())
+      .sort((a,b)=> keys.reduce((s,k)=>s+b.totals[k],0) - keys.reduce((s,k)=>s+a.totals[k],0) || a.staff.localeCompare(b.staff))
+      .map(g=>{
+        const rows = g.items.sort((a,b)=>b.date-a.date).map(e=>`
+          <div class="entry">
+            <span class="entry-date">${e.date.toLocaleDateString('id-ID', {weekday:'short', day:'numeric', month:'short'})}</span>
+            <span>${pillsHtml(e, keys)}</span>
+          </div>`).join('');
+        return `<div class="day-group">
+          <div class="day-head">
+            <span style="display:flex; align-items:center; gap:10px;"><span class="avatar">${esc(initials(g.staff))}</span>${esc(g.staff)}</span>
+            <span class="dh-meta">${pillsHtml(g.totals, keys)}</span>
+          </div>
+          <div class="day-body">${rows}</div>
+        </div>`;
+      }).join('');
+  }
+}
+
+document.getElementById('deviceLogFilters').addEventListener('click', (e)=>{
+  const b = e.target.closest('button[data-product]');
+  if(!b) return;
+  deviceLogProduct = b.dataset.product;
+  renderDeviceLog(rowsForMonth(selectedMonthKey));
+});
+document.getElementById('deviceLogModes').addEventListener('click', (e)=>{
+  const b = e.target.closest('button[data-mode]');
+  if(!b) return;
+  deviceLogMode = b.dataset.mode;
+  renderDeviceLog(rowsForMonth(selectedMonthKey));
+});
+document.getElementById('deviceLogStaff').addEventListener('change', (e)=>{
+  deviceLogStaff = e.target.value;
+  renderDeviceLog(rowsForMonth(selectedMonthKey));
+});
+document.getElementById('deviceLogCollapse').addEventListener('click', (e)=>{
+  const b = e.target.closest('button[data-collapse]');
+  if(!b) return;
+  const collapse = b.dataset.collapse === '1';
+  document.querySelectorAll('#deviceLogList .day-group').forEach(g=>g.classList.toggle('collapsed', collapse));
+});
+document.getElementById('deviceLogList').addEventListener('click', (e)=>{
+  const h = e.target.closest('.day-head');
+  if(h && h.parentElement) h.parentElement.classList.toggle('collapsed');
+});
 
 fetchSheetData();
 </script>
