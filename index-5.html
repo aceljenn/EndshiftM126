@@ -142,6 +142,14 @@
   .btn-sm{font-size:12px; padding:5px 10px; margin-right:4px;}
   .btn-wa{background:#25D366; border-color:#25D366; color:#fff;}
   .ok-note{background:var(--green-bg); color:var(--green); border-radius:8px; padding:12px 14px; font-weight:700; font-size:13.5px;}
+  .trainer-only{display:none;}
+  body.trainer-on .trainer-only{display:block;}
+  .modal-back{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
+  .modal-back.open{display:flex;}
+  .modal{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; max-width:340px; width:100%; box-shadow:var(--shadow);}
+  .modal h3{margin:0 0 6px; font-size:16px;}
+  .modal input{width:100%; font-family:inherit; font-size:15px; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text); margin:12px 0 4px;}
+  .modal .err{color:var(--red); font-size:12.5px; min-height:20px; margin-bottom:8px;}
   textarea.msg-box{
     width:100%; min-height:150px; font-family:inherit; font-size:13px; padding:10px 12px; border-radius:8px;
     border:1px solid var(--border); background:var(--surface-alt); color:var(--text); resize:vertical; margin:8px 0 10px;
@@ -273,6 +281,9 @@
     <a class="side-link" href="https://docs.google.com/forms/d/e/1FAIpQLSckv5jybuadbmja0zvLqJXvWLPufpTUOCHrkLrU-3Ho9nZDJA/viewform" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> Try On Aksara</a>
     <a class="side-link" href="https://docs.google.com/forms/d/e/1FAIpQLSdDj3fPWA5_tZ7xBcjEhb8hMn0DAQ5Ok_joASUjwStYUjC5Ow/viewform" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> Try On Samudra</a>
     <a class="side-link" href="https://forms.gle/7tDiXjE5j6dxmNLu8" target="_blank" rel="noopener"><span class="side-icon">&#128221;</span> End Shift M126</a>
+
+    <div class="side-title">Trainer</div>
+    <button class="side-link" id="trainerBtn"><span class="side-icon" id="trainerIcon">&#128274;</span> <span id="trainerLabel">Mode Trainer</span></button>
   </aside>
 
   <div class="main-content">
@@ -315,10 +326,19 @@
   </div>
       <div class="home-grid" id="homeGrid"></div>
 
-      <section class="panel" id="missingPanel" style="margin-top:22px;">
+      <section class="panel trainer-only" id="missingPanel" style="margin-top:22px;">
         <h2>Staff Belum Input Form</h2>
         <p class="panel-sub" id="missingSub">Memuat&hellip;</p>
         <div id="missingBody"></div>
+        <details style="margin-top:18px;">
+          <summary style="cursor:pointer; font-size:12.5px; color:var(--text-muted); font-weight:600;">Ganti PIN trainer</summary>
+          <p style="font-size:12.5px; color:var(--text-muted); margin:10px 0;">Ketik PIN baru, klik "Buat kode", lalu di GitHub buka index.html &rarr; Edit &rarr; Find <b>TRAINER_PIN_HASH</b> dan ganti isi di dalam tanda kutip dengan kode yang muncul &rarr; Commit.</p>
+          <div class="filter-bar">
+            <input type="text" id="newPinInput" placeholder="PIN baru" style="font-family:inherit; font-size:13px; padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+            <button class="btn btn-sm" id="newPinBtn">Buat kode</button>
+          </div>
+          <input type="text" id="newPinHash" readonly placeholder="kode akan muncul di sini" style="width:100%; font-family:monospace; font-size:11.5px; padding:7px 10px; border-radius:8px; border:1px solid var(--border); background:var(--surface-alt); color:var(--text);">
+        </details>
       </section>
     </div>
 
@@ -532,6 +552,19 @@
     </div>
 
     <footer class="credit">Data ditarik langsung dari Google Sheet Form_Responses &middot; END SHIFT M126<br>Dibuat oleh <strong>aceljenn</strong> (Jennifer)</footer>
+  </div>
+</div>
+
+<div class="modal-back" id="pinModal">
+  <div class="modal">
+    <h3>Mode Trainer</h3>
+    <div style="font-size:13px; color:var(--text-muted);">Masukkan PIN untuk membuka panel khusus trainer.</div>
+    <input type="password" id="pinInput" inputmode="numeric" autocomplete="off" placeholder="PIN">
+    <div class="err" id="pinErr"></div>
+    <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <button class="btn" id="pinCancel">Batal</button>
+      <button class="btn primary" id="pinOk">Buka</button>
+    </div>
   </div>
 </div>
 
@@ -1494,6 +1527,47 @@ document.getElementById('deviceLogList').addEventListener('click', (e)=>{
   const h = e.target.closest('.day-head');
   if(h && h.parentElement) h.parentElement.classList.toggle('collapsed');
 });
+
+/* ---------- mode trainer (PIN) ---------- */
+/* PIN default: 481926 -> ganti lewat menu "Ganti PIN trainer" di panel, lalu ganti kode di bawah ini */
+const TRAINER_PIN_HASH = '72126e8f371e6eacaedcb1458fc9e0dac0d53f00dc4f92fdea203fb774394f85';
+
+async function hashPin(pin){
+  const data = new TextEncoder().encode('esm126:' + pin);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function setTrainerMode(on){
+  document.body.classList.toggle('trainer-on', on);
+  document.getElementById('trainerLabel').textContent = on ? 'Keluar Mode Trainer' : 'Mode Trainer';
+  document.getElementById('trainerIcon').innerHTML = on ? '&#128275;' : '&#128274;';
+  try{ if(on) sessionStorage.setItem('esm126-trainer','1'); else sessionStorage.removeItem('esm126-trainer'); }catch(e){}
+}
+function closePinModal(){ document.getElementById('pinModal').classList.remove('open'); }
+async function tryUnlock(){
+  const err = document.getElementById('pinErr');
+  const pin = document.getElementById('pinInput').value.trim();
+  if(typeof crypto === 'undefined' || !crypto.subtle){ err.textContent = 'Browser ini tidak mendukung verifikasi PIN. Buka lewat link GitHub Pages (https).'; return; }
+  const h = await hashPin(pin);
+  if(h === TRAINER_PIN_HASH){ closePinModal(); setTrainerMode(true); }
+  else{ err.textContent = 'PIN salah.'; }
+}
+document.getElementById('trainerBtn').addEventListener('click', ()=>{
+  if(document.body.classList.contains('trainer-on')){ setTrainerMode(false); return; }
+  document.getElementById('pinInput').value = '';
+  document.getElementById('pinErr').textContent = '';
+  document.getElementById('pinModal').classList.add('open');
+  setTimeout(()=>document.getElementById('pinInput').focus(), 50);
+});
+document.getElementById('pinCancel').addEventListener('click', closePinModal);
+document.getElementById('pinOk').addEventListener('click', tryUnlock);
+document.getElementById('pinInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') tryUnlock(); });
+document.getElementById('newPinBtn').addEventListener('click', async ()=>{
+  const v = document.getElementById('newPinInput').value.trim();
+  if(!v) return;
+  document.getElementById('newPinHash').value = await hashPin(v);
+});
+try{ if(sessionStorage.getItem('esm126-trainer') === '1') setTrainerMode(true); }catch(e){}
 
 fetchSheetData();
 </script>
