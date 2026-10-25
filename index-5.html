@@ -25,6 +25,8 @@
     --radius: 10px;
     --blue:#2F63C7; --blue-bg:#E6EEFB;
     --purple:#7A45C9; --purple-bg:#F0E8FB;
+    --amber:#9A6A12; --amber-bg:#FBF0D9;
+    --pink:#B83A78; --pink-bg:#FBE6F0;
   }
   [data-theme="dark"]{
     --bg:#15171A;
@@ -43,6 +45,8 @@
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 1px 12px rgba(0,0,0,0.25);
     --blue:#7DA8FF; --blue-bg:rgba(125,168,255,0.14);
     --purple:#B896FF; --purple-bg:rgba(184,150,255,0.14);
+    --amber:#F2C14E; --amber-bg:rgba(242,193,78,0.14);
+    --pink:#FF8FBF; --pink-bg:rgba(255,143,191,0.14);
   }
   *{box-sizing:border-box;}
   body{
@@ -132,7 +136,9 @@
     text-transform:uppercase;
   }
   .pill{display:inline-flex; align-items:center; padding:3px 10px; border-radius:14px; font-size:12px; font-weight:700; margin:1px 2px 1px 0;}
-  .p-iphone15{background:var(--orange-bg); color:var(--orange-strong);}
+  .p-iphone18{background:var(--orange-bg); color:var(--orange-strong);}
+  .p-iphone15{background:var(--amber-bg); color:var(--amber);}
+  .p-airpods{background:var(--pink-bg); color:var(--pink);}
   .p-ipada16{background:var(--green-bg); color:var(--green);}
   .p-macbookneo{background:var(--blue-bg); color:var(--blue);}
   .p-watchse3{background:var(--purple-bg); color:var(--purple);}
@@ -223,6 +229,7 @@
   }
   .badge.ok{background:var(--green-bg); color:var(--green);}
   .badge.bad{background:var(--red-bg); color:var(--red);}
+  .badge.neutral{background:var(--surface-alt); color:var(--text-muted);}
   .badge.dot::before{content:''; width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;}
 
   /* sections */
@@ -375,28 +382,24 @@
     <div id="view-device" class="view">
   <section class="panel" id="device">
     <h2>Fokus Jualan Device</h2>
-    <p class="panel-sub">Target per staff/minggu: iPhone 15: 2 unit &middot; iPad A16: 1 unit &middot; MacBook Neo: 1 unit &middot; Watch SE 3: 2 unit. Target total per bulan: iPhone 15: 56 &middot; iPad A16: 28 &middot; MacBook Neo: 28 &middot; Watch SE 3: 56 unit (seluruh staff).</p>
+    <p class="panel-sub" id="deviceSub"></p>
 
     <div class="cards-row" id="deviceMonthCards" style="margin-bottom:20px;"></div>
 
     <h3 style="font-size:14px; margin:0 0 10px;">Target per Staff &mdash; Bulan Ini</h3>
     <div class="table-scroll" style="margin-bottom:24px;">
       <table>
-        <thead>
-          <tr><th>Nama Staff</th><th class="num">iPhone 15</th><th>Status</th><th class="num">iPad A16</th><th>Status</th><th class="num">MacBook Neo</th><th>Status</th><th class="num">Watch SE 3</th><th>Status</th></tr>
-        </thead>
+        <thead id="deviceStaffHead"></thead>
         <tbody id="deviceStaffBody"></tbody>
       </table>
     </div>
 
     <h3 style="font-size:14px; margin:0 0 4px;">Progress Mingguan per Staff</h3>
-    <p class="panel-sub" style="margin-top:0;">Target per minggu: iPhone 15: 2 &middot; iPad A16: 1 &middot; MacBook Neo: 1 &middot; Watch SE 3: 2.</p>
+    <p class="panel-sub" style="margin-top:0;" id="deviceWeekSub"></p>
     <div class="week-tabs" id="deviceWeekTabs"></div>
     <div class="table-scroll" style="margin-bottom:24px;">
       <table>
-        <thead>
-          <tr><th>Nama Staff</th><th class="num">iPhone 15</th><th>Status</th><th class="num">iPad A16</th><th>Status</th><th class="num">MacBook Neo</th><th>Status</th><th class="num">Watch SE 3</th><th>Status</th></tr>
-        </thead>
+        <thead id="deviceWeeklyHead"></thead>
         <tbody id="deviceWeeklyBody"></tbody>
       </table>
     </div>
@@ -404,13 +407,7 @@
     <h3 style="font-size:14px; margin:0 0 4px;">Log Penjualan Device</h3>
     <p class="panel-sub" style="margin-top:0;">Filter berdasarkan produk atau staff, pilih tampilan per hari / per staff, dan klik judul grup untuk buka-tutup.</p>
 
-    <div class="filter-bar" id="deviceLogFilters">
-      <button class="chip-btn active" data-product="ALL">Semua Produk</button>
-      <button class="chip-btn" data-product="iphone15">iPhone 15</button>
-      <button class="chip-btn" data-product="ipada16">iPad A16</button>
-      <button class="chip-btn" data-product="macbookneo">MacBook Neo</button>
-      <button class="chip-btn" data-product="watchse3">Watch SE 3</button>
-    </div>
+    <div class="filter-bar" id="deviceLogFilters"></div>
     <div class="filter-bar">
       <select id="deviceLogStaff"></select>
       <span id="deviceLogModes" style="display:flex; gap:6px;">
@@ -522,7 +519,7 @@
         <h3 style="font-size:14px; margin:0 0 10px;">Aktivitas Harian</h3>
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Tanggal</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th><th class="num">iPhone 15</th><th class="num">iPad A16</th><th class="num">MacBook Neo</th><th class="num">Watch SE 3</th></tr></thead>
+            <thead id="staffProfileLogHead"></thead>
             <tbody id="staffProfileLogBody"></tbody>
           </table>
         </div>
@@ -532,8 +529,13 @@
     <div id="view-champion" class="view">
       <section class="panel">
         <h2>LOB Champion</h2>
-        <p class="panel-sub">PIC penanggung jawab tiap fokus produk, beserta pencapaian mereka di kategori masing-masing bulan ini.</p>
-        <div class="cards-row" id="championCards"></div>
+        <p class="panel-sub" id="championSub"></p>
+        <div class="cards-row" id="championCards" style="margin-bottom:20px;"></div>
+        <h3 style="font-size:14px; margin:0 0 10px;">Demo Harian ke Customer</h3>
+        <div id="championDemoWrap" style="margin-bottom:24px;"></div>
+        <h3 style="font-size:14px; margin:0 0 4px;">Target Penjualan per LOB</h3>
+        <p class="panel-sub" style="margin-top:0;" id="championSalesSub"></p>
+        <div id="championSalesWrap"></div>
       </section>
     </div>
 
@@ -544,7 +546,7 @@
         <select id="activityLogFilter" style="margin-bottom:18px;"></select>
         <div class="table-scroll">
           <table>
-            <thead><tr><th>Tanggal</th><th>Nama Staff</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th><th class="num">iPhone 15</th><th class="num">iPad A16</th><th class="num">MacBook Neo</th><th class="num">Watch SE 3</th></tr></thead>
+            <thead id="activityLogHead"></thead>
             <tbody id="activityLogBody"></tbody>
           </table>
         </div>
@@ -581,19 +583,47 @@ const TARGET_AKSARA_DAILY = 6;
 const TARGET_SAMUDRA_MIN = 2;
 const TARGET_NEWMEMBER_DAILY = 2;
 
+/* Target penjualan device: angka per MINGGU untuk seluruh store (minggu = Minggu s/d Sabtu).
+   Dibagi rata ke staff aktif jualan dan ke 7 hari. Satu bulan dihitung WEEKS_PER_MONTH minggu. */
+const ACTIVE_SELLERS = 7;
+const WEEKS_PER_MONTH = 4;
+const MIN_WEEKLY_PER_STAFF = 1;   /* target per staff yang hasilnya di bawah 1 dinaikkan jadi 1 */
 const DEVICE_TARGETS = {
-  iphone15:   { label:'iPhone 15',   weekly:2, monthlyPerStaff:8, monthlyTotal:56 },
-  ipada16:    { label:'iPad A16',    weekly:1, monthlyPerStaff:4, monthlyTotal:28 },
-  macbookneo: { label:'MacBook Neo', weekly:1, monthlyPerStaff:4, monthlyTotal:28 },
-  watchse3:   { label:'Watch SE 3',  weekly:2, monthlyPerStaff:8, monthlyTotal:56 },
+  iphone18:   { label:'iPhone 18 Pro/Max', weeklyStore:42 },
+  iphone15:   { label:'iPhone 15',         weeklyStore:19 },
+  macbookneo: { label:'MacBook Neo',       weeklyStore:5  },
+  airpods:    { label:'AirPods',           weeklyStore:4  },
+  ipada16:    { label:'iPad A16',          weeklyStore:8  },
+  watchse3:   { label:'Watch SE 3',        weeklyStore:4  },
 };
-const DEVICE_KEYS = ['iphone15','ipada16','macbookneo','watchse3'];
+const DEVICE_KEYS = ['iphone18','iphone15','macbookneo','airpods','ipada16','watchse3'];
+DEVICE_KEYS.forEach(k=>{
+  const c = DEVICE_TARGETS[k];
+  c.weekly = Math.max(MIN_WEEKLY_PER_STAFF, c.weeklyStore / ACTIVE_SELLERS);   /* per staff / minggu */
+  c.dailyPerStaff = c.weekly / 7;                       /* per staff / hari   */
+  c.monthlyTotal = c.weeklyStore * WEEKS_PER_MONTH;     /* store / bulan      */
+  c.monthlyPerStaff = c.weekly * WEEKS_PER_MONTH;       /* per staff / bulan  */
+});
+function fmtNum(n){ return Number(n).toLocaleString('id-ID', {maximumFractionDigits:2}); }
+function zeroDevices(){ const o = {}; DEVICE_KEYS.forEach(k=>{ o[k] = 0; }); return o; }
 
+/* LOB Champion per staff. Nama LOB (kanan) harus sama dengan salah satu kunci di LOB_DEFS. */
 const LOB_CHAMPIONS = {
   'Arya Dwi Persada': 'watchse3',
   'Abdul Rosyid Faqih': 'macbookneo',
   'Firly Savira Oktaviandi': 'ipada16',
-  'Fidiartiningsih': 'iphone15',
+  'Fidiartiningsih': 'airpods',
+};
+/* Penghitungan demo LOB Champion mulai Senin, 26 Okt 2026 (bulan 0-based: 9 = Oktober) */
+const DEMO_START_DATE = [2026, 9, 26];
+function demoStartDay(){ return new Date(DEMO_START_DATE[0], DEMO_START_DATE[1], DEMO_START_DATE[2]); }
+function demoStarted(){ return new Date() >= demoStartDay(); }
+/* Target demo ke customer per HARI (per store) untuk tiap LOB */
+const LOB_DEFS = {
+  watchse3:   { label:'Apple Watch', demoTarget:2 },
+  macbookneo: { label:'MacBook',     demoTarget:4 },
+  ipada16:    { label:'iPad',        demoTarget:6 },
+  airpods:    { label:'AirPods',     demoTarget:6 },
 };
 
 /* Backfill kegiatan 1-7 Sept 2026 yang belum sempat diinput staff sebelum dashboard mulai jalan
@@ -631,7 +661,7 @@ const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','A
 let allRows = [];
 let selectedMonthKey = null;
 let selectedWeek = 1;
-let selectedDeviceWeek = 1;
+let selectedDeviceWeekKey = null;
 let selectedProfileStaff = null;
 let selectedLogStaff = 'ALL';
 
@@ -706,12 +736,57 @@ function parseGvizDate(cell){
 function badge(ok, okText, badText){
   return `<span class="badge dot ${ok?'ok':'bad'}">${ok?okText:badText}</span>`;
 }
+function parseDemo(cell){
+  if(!cell || cell.v == null) return 0;
+  if(typeof cell.v === 'number') return cell.v;
+  const t = String(cell.v).trim().replace(',', '.');
+  return /^\d+(\.\d+)?$/.test(t) ? parseFloat(t) : 0;
+}
+function championLobOf(staff){
+  const n = normName(staff);
+  for(const [name,key] of Object.entries(LOB_CHAMPIONS)){
+    if(normName(name) === n) return key;
+  }
+  return null;
+}
+/* demo harian per LOB. Hanya isian dari LOB Champion itu sendiri yang dihitung ke LOB-nya.
+   Hari dihitung mulai DEMO_START_DATE, dan hanya hari yang ada submission form-nya. */
+function demoStats(monthRows){
+  const out = { dates:[], perDay:new Map() };
+  const startDay = demoStartDay();
+  const seen = new Map();
+  monthRows.filter(r=>!r.backfill).forEach(r=>{
+    const dayDate = new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate());
+    if(dayDate < startDay) return;
+    const dk = dayKey(r.date);
+    if(!seen.has(dk)){ seen.set(dk, dayDate); out.perDay.set(dk, {}); }
+    const lob = championLobOf(r.staff);
+    if(lob && r.demo > 0){
+      const o = out.perDay.get(dk);
+      o[lob] = (o[lob]||0) + r.demo;
+    }
+  });
+  out.dates = Array.from(seen.values()).sort((a,b)=>a-b);
+  return out;
+}
+function demoToday(){
+  if(!demoStarted()) return {};
+  const t = new Date();
+  const res = {};
+  allRows.forEach(r=>{
+    if(r.backfill || dayKey(r.date) !== dayKey(t)) return;
+    const lob = championLobOf(r.staff);
+    if(lob && r.demo > 0) res[lob] = (res[lob]||0) + r.demo;
+  });
+  return res;
+}
 function makeRow(p){
   return {
     date: p.date, staff: p.staff, backfill: !!p.backfill,
     invoice: p.invoice||0, nps: p.nps||0, aksara: p.aksara||0, samudra: p.samudra||0,
     newmember: p.newmember||0,
-    iphone15: p.iphone15||0, ipada16: p.ipada16||0, macbookneo: p.macbookneo||0, watchse3: p.watchse3||0,
+    demo: p.demo||0, demoFilled: !!p.demoFilled, airpods: p.airpods||0,
+    iphone18: p.iphone18||0, iphone15: p.iphone15||0, ipada16: p.ipada16||0, macbookneo: p.macbookneo||0, watchse3: p.watchse3||0,
   };
 }
 
@@ -736,14 +811,25 @@ async function fetchSheetData(){
       nps: cols.findIndex(c=>c.includes('nps')),
       aksara: cols.findIndex(c=>c.includes('aksara')),
       samudra: cols.findIndex(c=>c.includes('samudra')),
-      iphone15: cols.findIndex(c=>c.includes('iphone')),
+      iphone18: cols.findIndex(c=>c.includes('iphone') && (/18/.test(c) || (!/15/.test(c) && /pro|max/.test(c)))),
+      iphone15: cols.findIndex(c=>c.includes('iphone') && !/18|pro|max/.test(c)),
       ipada16: cols.findIndex(c=>c.includes('ipad')),
       macbookneo: cols.findIndex(c=>c.includes('macbook')),
       watchse3: cols.findIndex(c=>c.includes('watch')),
       newmember: cols.findIndex(c=>c.includes('total new member')) >= 0
                  ? cols.findIndex(c=>c.includes('total new member'))
                  : cols.findIndex(c=>c.includes('new member')),
+      airpods: cols.findIndex(c=>c.includes('airpods') && !/champion|demo/.test(c)),
     };
+    /* kolom demo LOB Champion: cari header berisi "champion" atau "demo".
+       Kalau ada lebih dari satu (mis. kolom foto), pakai yang isinya paling banyak berupa angka. */
+    const numericLike = v => v != null && /^\s*\d+([.,]\d+)?\s*$/.test(String(v));
+    let demoIdx = -1, demoBest = -1;
+    cols.forEach((label,i)=>{
+      if(!/champion|demo/.test(label)) return;
+      const n = json.table.rows.filter(r=>r.c[i] && numericLike(r.c[i].v)).length;
+      if(n > demoBest){ demoBest = n; demoIdx = i; }
+    });
     allRows = json.table.rows.map(r=>{
       const c = i => (i>=0 ? r.c[i] : null);
       const tanggalCell = c(idx.tanggal);
@@ -754,8 +840,11 @@ async function fetchSheetData(){
         invoice: parseNum(c(idx.invoice)), nps: parseNum(c(idx.nps)),
         aksara: parseNum(c(idx.aksara)), samudra: parseNum(c(idx.samudra)),
         newmember: parseNum(c(idx.newmember)),
-        iphone15: parseNum(c(idx.iphone15)), ipada16: parseNum(c(idx.ipada16)),
+        iphone18: parseNum(c(idx.iphone18)), iphone15: parseNum(c(idx.iphone15)), ipada16: parseNum(c(idx.ipada16)),
         macbookneo: parseNum(c(idx.macbookneo)), watchse3: parseNum(c(idx.watchse3)),
+        airpods: parseNum(c(idx.airpods)),
+        demo: demoIdx >= 0 ? parseDemo(c(demoIdx)) : 0,
+        demoFilled: demoIdx >= 0 && !!c(demoIdx) && c(demoIdx).v != null && String(c(demoIdx).v).trim() !== '',
       });
     }).filter(r => r.date && r.staff);
 
@@ -815,22 +904,21 @@ function exportCSV(){
   rows.push(['Diexport oleh', 'aceljenn (Jennifer)']);
   rows.push(['Tanggal export', new Date().toLocaleString('id-ID')]);
   rows.push([]);
-  rows.push(['Tanggal','Nama Staff','Qty Invoice','Total NPS','Try On Aksara','Try On Samudra']);
+  rows.push(['Tanggal','Nama Staff','Qty Invoice','Total NPS','New Member','Try On Aksara','Try On Samudra', ...DEVICE_KEYS.map(k=>DEVICE_TARGETS[k].label), 'Demo LOB']);
   monthRows.forEach(r=>{
-    rows.push([fmtDate(r.date), r.staff, r.invoice, r.nps, r.aksara, r.samudra]);
+    rows.push([fmtDate(r.date), r.staff, r.invoice, r.nps, r.newmember, r.aksara, r.samudra, ...DEVICE_KEYS.map(k=>r[k]), r.demoFilled ? r.demo : '']);
   });
+  const sum = k => monthRows.reduce((t,r)=>t+r[k],0);
   rows.push([]);
-  rows.push(['TOTAL BULAN INI', '',
-    monthRows.reduce((s,r)=>s+r.invoice,0),
-    monthRows.reduce((s,r)=>s+r.nps,0),
-    monthRows.reduce((s,r)=>s+r.aksara,0),
-    monthRows.reduce((s,r)=>s+r.samudra,0)
-  ]);
+  rows.push(['TOTAL BULAN INI', '', sum('invoice'), sum('nps'), sum('newmember'), sum('aksara'), sum('samudra'), ...DEVICE_KEYS.map(k=>sum(k)), sum('demo')]);
   rows.push([]);
   rows.push(['Target NPS Bulanan', TARGET_NPS_MONTHLY]);
   rows.push(['Target NPS Harian', TARGET_NPS_DAILY]);
+  rows.push(['Target New Member Harian', TARGET_NEWMEMBER_DAILY]);
   rows.push(['Target Try On Aksara Harian', TARGET_AKSARA_DAILY]);
   rows.push(['Target Minimal Try On Samudra Harian', TARGET_SAMUDRA_MIN]);
+  Object.values(LOB_CHAMPIONS).forEach(k=>{ rows.push([`Target Demo ${LOB_DEFS[k].label} per Hari`, LOB_DEFS[k].demoTarget]); });
+  DEVICE_KEYS.forEach(k=>{ rows.push([`Target Penjualan ${DEVICE_TARGETS[k].label} per Minggu (store)`, DEVICE_TARGETS[k].weeklyStore]); });
 
   const csvContent = '\uFEFF' + rows.map(r => r.map(csvEscape).join(',')).join('\n');
   const blob = new Blob([csvContent], {type:'text/csv;charset=utf-8;'});
@@ -971,60 +1059,90 @@ function renderTryOn(monthRows, field, target, isDailyTargetExact){
   }).join('');
 }
 
+/* ---------- minggu: Minggu s/d Sabtu ---------- */
+function addDays(d,n){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()+n); }
+function weekStartSun(d){
+  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  return addDays(x, -x.getDay());               /* getDay(): 0 = Minggu */
+}
+function weeksOfMonthKey(key){
+  const [y,m] = key.split('-').map(Number);
+  const last = new Date(y, m, 0);
+  const out = [];
+  for(let st = weekStartSun(new Date(y, m-1, 1)); st <= last; st = addDays(st,7)){
+    out.push({ start:st, end:addDays(st,6), key:dayKey(st) });
+  }
+  return out;
+}
+function weekLabel(w){ return `${shortDate(w.start)} \u2013 ${shortDate(w.end)}`; }
+function rowsInWeek(w){
+  return allRows.filter(r=>{
+    const d = new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate());
+    return d >= w.start && d <= w.end;
+  });
+}
+function currentWeek(){ const st = weekStartSun(new Date()); return { start:st, end:addDays(st,6), key:dayKey(st) }; }
+
+function deviceCell(total, target){
+  return `<td class="num"><div>${total} / ${fmtNum(target)}</div><div style="margin-top:4px;">${badge(total >= target,'Tercapai','Belum Tercapai')}</div></td>`;
+}
+
 function renderDevice(monthRows){
   const names = Array.from(new Set([...STAFF_LIST, ...monthRows.map(r=>r.staff)]));
+  const headCells = DEVICE_KEYS.map(k=>`<th class="num">${DEVICE_TARGETS[k].label}</th>`).join('');
 
-  /* overview cards */
-  const cardsEl = document.getElementById('deviceMonthCards');
-  cardsEl.innerHTML = DEVICE_KEYS.map(key=>{
+  document.getElementById('deviceSub').textContent =
+    `Target penjualan per minggu (Minggu s/d Sabtu) untuk seluruh store: ` +
+    DEVICE_KEYS.map(k=>`${DEVICE_TARGETS[k].label} ${DEVICE_TARGETS[k].weeklyStore}`).join(' \u00B7 ') +
+    `. Dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu). Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
+  document.getElementById('deviceWeekSub').textContent =
+    'Target per staff/minggu: ' + DEVICE_KEYS.map(k=>`${DEVICE_TARGETS[k].label} ${fmtNum(DEVICE_TARGETS[k].weekly)}`).join(' \u00B7 ') + '.';
+
+  document.getElementById('deviceMonthCards').innerHTML = DEVICE_KEYS.map(key=>{
     const cfg = DEVICE_TARGETS[key];
     const total = monthRows.reduce((s,r)=>s+r[key],0);
-    const ok = total >= cfg.monthlyTotal;
     return `<div class="stat-card">
       <div class="sc-label">${cfg.label} Bulan Ini</div>
       <div class="sc-value">${total} <span style="font-size:14px; color:var(--text-muted); font-weight:600;">/ ${cfg.monthlyTotal}</span></div>
-      <div style="margin-top:8px;">${badge(ok,'Tercapai','Belum Tercapai')}</div>
+      <div style="margin-top:8px;">${badge(total >= cfg.monthlyTotal,'Tercapai','Belum Tercapai')}</div>
     </div>`;
   }).join('');
 
-  /* per-staff monthly table */
-  const staffBody = document.getElementById('deviceStaffBody');
-  staffBody.innerHTML = names.map(name=>{
+  document.getElementById('deviceStaffHead').innerHTML = `<tr><th>Nama Staff</th>${headCells}</tr>`;
+  document.getElementById('deviceStaffBody').innerHTML = names.map(name=>{
     const rs = monthRows.filter(r=>r.staff===name);
-    const cells = DEVICE_KEYS.map(key=>{
-      const total = rs.reduce((s,r)=>s+r[key],0);
-      const ok = total >= DEVICE_TARGETS[key].monthlyPerStaff;
-      return `<td class="num">${total} / ${DEVICE_TARGETS[key].monthlyPerStaff}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td>`;
-    }).join('');
-    return `<tr><td>${name}</td>${cells}</tr>`;
-  }).join('');
+    const cells = DEVICE_KEYS.map(k=>deviceCell(rs.reduce((s,r)=>s+r[k],0), DEVICE_TARGETS[k].monthlyPerStaff)).join('');
+    return `<tr><td>${esc(name)}</td>${cells}</tr>`;
+  }).join('') + `<tr class="total-row"><td>TOTAL STORE</td>${DEVICE_KEYS.map(k=>deviceCell(monthRows.reduce((s,r)=>s+r[k],0), DEVICE_TARGETS[k].monthlyTotal)).join('')}</tr>`;
 
-  /* weekly tabs + table */
-  const weeks = Array.from(new Set(monthRows.map(r=>weekOfMonth(r.date)))).sort((a,b)=>a-b);
-  if(weeks.length===0) weeks.push(1);
-  if(!weeks.includes(selectedDeviceWeek)) selectedDeviceWeek = weeks[0];
+  const weeks = weeksOfMonthKey(selectedMonthKey);
+  if(!selectedDeviceWeekKey || !weeks.some(w=>w.key===selectedDeviceWeekKey)){
+    const cw = currentWeek();
+    const found = weeks.find(w=>w.key===cw.key);
+    const [y,m] = selectedMonthKey.split('-').map(Number);
+    const now = new Date();
+    const past = (y < now.getFullYear()) || (y === now.getFullYear() && m < now.getMonth()+1);
+    selectedDeviceWeekKey = (found || (past ? weeks[weeks.length-1] : weeks[0])).key;
+  }
   const tabsEl = document.getElementById('deviceWeekTabs');
-  tabsEl.innerHTML = weeks.map(w=>`<button data-week="${w}" class="${w===selectedDeviceWeek?'active':''}">Minggu ${w}</button>`).join('');
+  tabsEl.innerHTML = weeks.map(w=>`<button data-week="${w.key}" class="${w.key===selectedDeviceWeekKey?'active':''}">${weekLabel(w)}</button>`).join('');
   tabsEl.querySelectorAll('button').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      selectedDeviceWeek = Number(btn.dataset.week);
+      selectedDeviceWeekKey = btn.dataset.week;
       renderDevice(rowsForMonth(selectedMonthKey));
     });
   });
-  const weekRows = monthRows.filter(r=>weekOfMonth(r.date)===selectedDeviceWeek);
-  const weeklyBody = document.getElementById('deviceWeeklyBody');
-  const weeklyNames = Array.from(new Set([...STAFF_LIST, ...weekRows.map(r=>r.staff)]));
-  weeklyBody.innerHTML = weeklyNames.map(name=>{
-    const rs = weekRows.filter(r=>r.staff===name);
-    const cells = DEVICE_KEYS.map(key=>{
-      const total = rs.reduce((s,r)=>s+r[key],0);
-      const ok = total >= DEVICE_TARGETS[key].weekly;
-      return `<td class="num">${total} / ${DEVICE_TARGETS[key].weekly}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td>`;
-    }).join('');
-    return `<tr><td>${name}</td>${cells}</tr>`;
-  }).join('');
 
-  /* interactive sales log */
+  const week = weeks.find(w=>w.key===selectedDeviceWeekKey);
+  const weekRows = rowsInWeek(week);
+  const weeklyNames = Array.from(new Set([...STAFF_LIST, ...weekRows.map(r=>r.staff)]));
+  document.getElementById('deviceWeeklyHead').innerHTML = `<tr><th>Nama Staff</th>${headCells}</tr>`;
+  document.getElementById('deviceWeeklyBody').innerHTML = weeklyNames.map(name=>{
+    const rs = weekRows.filter(r=>r.staff===name);
+    const cells = DEVICE_KEYS.map(k=>deviceCell(rs.reduce((s,r)=>s+r[k],0), DEVICE_TARGETS[k].weekly)).join('');
+    return `<tr><td>${esc(name)}</td>${cells}</tr>`;
+  }).join('') + `<tr class="total-row"><td>TOTAL STORE</td>${DEVICE_KEYS.map(k=>deviceCell(weekRows.reduce((s,r)=>s+r[k],0), DEVICE_TARGETS[k].weeklyStore)).join('')}</tr>`;
+
   renderDeviceLog(monthRows);
 }
 
@@ -1070,7 +1188,9 @@ function renderHome(monthRows){
 
   const deviceTotal = DEVICE_KEYS.reduce((s,k)=>s+monthRows.reduce((s2,r)=>s2+r[k],0),0);
   const deviceTarget = DEVICE_KEYS.reduce((s,k)=>s+DEVICE_TARGETS[k].monthlyTotal,0);
-  const deviceWeekTotal = DEVICE_KEYS.reduce((s,k)=>s+monthRows.filter(r=>weekOfMonth(r.date)===weekOfMonth(today)).reduce((s2,r)=>s2+r[k],0),0);
+  const wkHome = rowsInWeek(currentWeek());
+  const deviceWeekTotal = DEVICE_KEYS.reduce((s,k)=>s+wkHome.reduce((s2,r)=>s2+r[k],0),0);
+  const deviceWeekTarget = DEVICE_KEYS.reduce((s,k)=>s+DEVICE_TARGETS[k].weeklyStore,0);
 
   const nmTotal = monthRows.reduce((s,r)=>s+r.newmember,0);
   const nmToday = todayRows.reduce((s,r)=>s+r.newmember,0);
@@ -1102,7 +1222,7 @@ function renderHome(monthRows){
       icon:'&#128241;', title:'Fokus Device', view:'device',
       rows:[
         ['Bulan Ini', `${deviceTotal} / ${deviceTarget} unit`],
-        ['Minggu Ini', `${deviceWeekTotal} unit`],
+        ['Minggu Ini', `${deviceWeekTotal} / ${deviceWeekTarget} unit`],
       ],
       ok: deviceTotal >= deviceTarget,
     },
@@ -1132,6 +1252,24 @@ function renderHome(monthRows){
     },
   ];
 
+  const demoMap = demoToday();
+  const dsHome = demoStats(monthRows);
+  const lobKeys = Object.values(LOB_CHAMPIONS);
+  const lobOk = lobKeys.filter(k => (demoMap[k] || 0) >= LOB_DEFS[k].demoTarget).length;
+  let demoMonthTotal = 0;
+  dsHome.dates.forEach(d=>{
+    const per = dsHome.perDay.get(dayKey(d)) || {};
+    lobKeys.forEach(k=>{ demoMonthTotal += per[k] || 0; });
+  });
+  cards.push({
+    icon:'&#127942;', title:'Demo LOB Champion', view:'champion',
+    rows:[
+      ['Hari Ini', demoStarted() ? `${lobOk} / ${lobKeys.length} LOB tercapai` : 'Mulai 26 Okt'],
+      ['Bulan Ini', `${demoMonthTotal} demo`],
+    ],
+    ok: demoStarted() ? lobOk === lobKeys.length : null,
+  });
+
   const grid = document.getElementById('homeGrid');
   grid.innerHTML = cards.map(c => `
     <div class="big-card" data-view="${c.view}">
@@ -1148,6 +1286,8 @@ function renderHome(monthRows){
   });
 }
 
+function deviceTh(){ return DEVICE_KEYS.map(k=>`<th class="num">${DEVICE_TARGETS[k].label}</th>`).join(''); }
+function deviceTds(r){ return DEVICE_KEYS.map(k=>`<td class="num">${r[k]}</td>`).join(''); }
 function renderStaffProfile(monthRows){
   const names = Array.from(new Set([...STAFF_LIST, ...allRows.map(r=>r.staff)])).sort();
   const sel = document.getElementById('staffProfileSelect');
@@ -1171,16 +1311,30 @@ function renderStaffProfile(monthRows){
   const totalSamudra = rs.reduce((s,r)=>s+r.samudra,0);
 
   const cardsEl = document.getElementById('staffProfileCards');
-  const champKey = LOB_CHAMPIONS[selectedProfileStaff];
+  const champKey = championLobOf(selectedProfileStaff);
   let champHtml = '';
   if(champKey){
+    const def = LOB_DEFS[champKey];
+    const ds = demoStats(monthRows);
+    let demoMonth = 0, okDays = 0;
+    ds.dates.forEach(d=>{
+      const n = (ds.perDay.get(dayKey(d)) || {})[champKey] || 0;
+      demoMonth += n;
+      if(n >= def.demoTarget) okDays++;
+    });
+    const todayN = demoToday()[champKey] || 0;
+    const started = demoStarted();
     const cfg = DEVICE_TARGETS[champKey];
-    const champTotal = rs.reduce((s,r)=>s+r[champKey],0);
-    const champOk = champTotal >= cfg.monthlyPerStaff;
+    const myWeek = rowsInWeek(currentWeek()).filter(r=>normName(r.staff)===normName(selectedProfileStaff));
+    const salesLine = cfg
+      ? `<div class="sc-sub">Penjualan minggu ini: ${myWeek.reduce((s,r)=>s+r[champKey],0)} / ${fmtNum(cfg.weekly)} unit</div>`
+      : '';
     champHtml = `<div class="stat-card" style="grid-column:1/-1; border-color:var(--orange); background:var(--orange-bg);">
-      <div class="sc-label" style="color:var(--orange-strong);">&#127942; LOB Champion &mdash; ${cfg.label}</div>
-      <div class="sc-value">${champTotal} <span style="font-size:14px; color:var(--text-muted); font-weight:600;">/ ${cfg.monthlyPerStaff} unit bulan ini</span></div>
-      <div style="margin-top:8px;">${badge(champOk,'Tercapai','Belum Tercapai')}</div>
+      <div class="sc-label" style="color:var(--orange-strong);">&#127942; LOB Champion &mdash; ${def.label}</div>
+      ${started ? `<div class="sc-value">${todayN} <span style="font-size:14px; color:var(--text-muted); font-weight:600;">/ ${def.demoTarget} demo hari ini</span></div>` : '<div class="sc-sub">Demo mulai dihitung Senin, 26 Okt 2026</div>'}
+      <div class="sc-sub">Bulan ini: ${demoMonth} demo &middot; ${okDays} / ${ds.dates.length} hari tercapai</div>
+      ${salesLine}
+      <div style="margin-top:8px;">${started ? badge(todayN >= def.demoTarget,'Tercapai','Belum Tercapai') : '<span class="badge neutral">Belum dimulai</span>'}</div>
     </div>`;
   }
   cardsEl.innerHTML = champHtml + `
@@ -1195,33 +1349,79 @@ function renderStaffProfile(monthRows){
     const cfg = DEVICE_TARGETS[key];
     const total = rs.reduce((s,r)=>s+r[key],0);
     const ok = total >= cfg.monthlyPerStaff;
-    return `<tr><td>${cfg.label}</td><td class="num">${total}</td><td class="num">${cfg.monthlyPerStaff}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td></tr>`;
+    return `<tr><td>${cfg.label}</td><td class="num">${total}</td><td class="num">${fmtNum(cfg.monthlyPerStaff)}</td><td>${badge(ok,'Tercapai','Belum Tercapai')}</td></tr>`;
   }).join('');
 
+  document.getElementById('staffProfileLogHead').innerHTML =
+    `<tr><th>Tanggal</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th>${deviceTh()}<th class="num">Demo LOB</th></tr>`;
   const logBody = document.getElementById('staffProfileLogBody');
   const sorted = rs.slice().sort((a,b)=> b.date - a.date);
   if(sorted.length === 0){
-    logBody.innerHTML = `<tr><td colspan="10" class="empty-note">Belum ada aktivitas tercatat bulan ini.</td></tr>`;
+    logBody.innerHTML = `<tr><td colspan="${7 + DEVICE_KEYS.length}" class="empty-note">Belum ada aktivitas tercatat bulan ini.</td></tr>`;
   }else{
     logBody.innerHTML = sorted.map(r=>
-      `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td><td class="num">${r.iphone15}</td><td class="num">${r.ipada16}</td><td class="num">${r.macbookneo}</td><td class="num">${r.watchse3}</td></tr>`
+      `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td>${deviceTds(r)}<td class="num">${r.demoFilled ? r.demo : '-'}</td></tr>`
     ).join('');
   }
 }
 
 function renderChampion(monthRows){
-  const cardsEl = document.getElementById('championCards');
-  cardsEl.innerHTML = Object.entries(LOB_CHAMPIONS).map(([staff, key])=>{
+  const keys = Object.values(LOB_CHAMPIONS);
+  document.getElementById('championSub').textContent =
+    'Target demo ke customer per hari: ' + keys.map(k=>`${LOB_DEFS[k].label} ${LOB_DEFS[k].demoTarget}`).join(' \u00B7 ') +
+    '. Isian demo dihitung otomatis ke LOB milik staff yang mengisi, mulai Senin, 26 Okt 2026.';
+
+  const ds = demoStats(monthRows);
+  const today = demoToday();
+  const started = demoStarted();
+  const wkRows = rowsInWeek(currentWeek());
+
+  document.getElementById('championCards').innerHTML = Object.entries(LOB_CHAMPIONS).map(([staff, key])=>{
+    const def = LOB_DEFS[key];
+    let total = 0, okDays = 0;
+    ds.dates.forEach(d=>{
+      const n = (ds.perDay.get(dayKey(d)) || {})[key] || 0;
+      total += n;
+      if(n >= def.demoTarget) okDays++;
+    });
+    const tn = today[key] || 0;
     const cfg = DEVICE_TARGETS[key];
-    const total = monthRows.filter(r=>r.staff===staff).reduce((s,r)=>s+r[key],0);
-    const ok = total >= cfg.monthlyPerStaff;
+    const mine = cfg ? wkRows.filter(r=>normName(r.staff)===normName(staff)).reduce((s,r)=>s+r[key],0) : 0;
+    const store = cfg ? wkRows.reduce((s,r)=>s+r[key],0) : 0;
     return `<div class="stat-card">
-      <div class="sc-label">${cfg.label}</div>
-      <div class="sc-value" style="font-size:20px;">${staff}</div>
-      <div class="sc-sub">${total} / ${cfg.monthlyPerStaff} unit bulan ini</div>
-      <div style="margin-top:8px;">${badge(ok,'Tercapai','Belum Tercapai')}</div>
+      <div class="sc-label">&#127942; ${def.label}</div>
+      <div class="sc-value" style="font-size:20px;">${esc(staff)}</div>
+      <div class="sc-sub">${started ? `Demo hari ini: ${tn} / ${def.demoTarget}` : 'Demo mulai dihitung Senin, 26 Okt 2026'}</div>
+      <div class="sc-sub">Bulan ini: ${total} demo &middot; ${okDays} / ${ds.dates.length} hari tercapai</div>
+      ${cfg ? `<div class="sc-sub">Penjualan minggu ini: ${mine} / ${fmtNum(cfg.weekly)} unit</div><div class="sc-sub">Store minggu ini: ${store} / ${cfg.weeklyStore} unit</div>` : ''}
+      <div style="margin-top:8px;">${started ? badge(tn >= def.demoTarget,'Tercapai','Belum Tercapai') : '<span class="badge neutral">Belum dimulai</span>'}</div>
     </div>`;
   }).join('');
+
+  document.getElementById('championSalesSub').textContent =
+    `Target store per minggu (Minggu s/d Sabtu) dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu), lalu dibagi 7 hari. Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
+  document.getElementById('championSalesWrap').innerHTML = `<div class="table-scroll"><table>
+    <thead><tr><th>LOB</th><th class="num">Store / minggu</th><th class="num">Per staff / minggu</th><th class="num">Per staff / hari</th><th class="num">Rata-rata 1 unit tiap</th><th class="num">Store / bulan</th></tr></thead>
+    <tbody>${DEVICE_KEYS.map(k=>{
+      const c = DEVICE_TARGETS[k];
+      return `<tr><td>${c.label}</td><td class="num">${c.weeklyStore}</td><td class="num">${fmtNum(c.weekly)}</td><td class="num">${fmtNum(c.dailyPerStaff)}</td><td class="num">${fmtNum(1 / c.dailyPerStaff)} hari</td><td class="num">${c.monthlyTotal}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+
+  const wrap = document.getElementById('championDemoWrap');
+  if(ds.dates.length === 0){
+    wrap.innerHTML = `<div class="empty-note">${demoStarted() ? 'Belum ada isian demo LOB Champion di bulan ini.' : 'Penghitungan demo dimulai Senin, 26 Okt 2026.'}</div>`;
+    return;
+  }
+  const head = `<tr><th>Tanggal</th>${keys.map(k=>`<th colspan="2" class="num">${LOB_DEFS[k].label} (target ${LOB_DEFS[k].demoTarget})</th>`).join('')}</tr>`;
+  const body = ds.dates.map(d=>{
+    const per = ds.perDay.get(dayKey(d)) || {};
+    const cells = keys.map(k=>{
+      const n = per[k] || 0;
+      return `<td class="num">${n} / ${LOB_DEFS[k].demoTarget}</td><td>${badge(n >= LOB_DEFS[k].demoTarget,'Tercapai','Belum Tercapai')}</td>`;
+    }).join('');
+    return `<tr><td>${fmtDate(d)}</td>${cells}</tr>`;
+  }).join('');
+  wrap.innerHTML = `<div class="table-scroll"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
 }
 
 function renderActivityLog(monthRows){
@@ -1240,13 +1440,15 @@ function renderActivityLog(monthRows){
   const filtered = (selectedLogStaff === 'ALL' ? monthRows : monthRows.filter(r=>r.staff===selectedLogStaff))
     .slice().sort((a,b)=> b.date - a.date);
 
+  document.getElementById('activityLogHead').innerHTML =
+    `<tr><th>Tanggal</th><th>Nama Staff</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th>${deviceTh()}<th class="num">Demo LOB</th></tr>`;
   const body = document.getElementById('activityLogBody');
   if(filtered.length === 0){
-    body.innerHTML = `<tr><td colspan="11" class="empty-note">Belum ada submission form untuk bulan/filter ini.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="${8 + DEVICE_KEYS.length}" class="empty-note">Belum ada submission form untuk bulan/filter ini.</td></tr>`;
     return;
   }
   body.innerHTML = filtered.map(r=>
-    `<tr><td>${fmtDate(r.date)}</td><td>${r.staff}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td><td class="num">${r.iphone15}</td><td class="num">${r.ipada16}</td><td class="num">${r.macbookneo}</td><td class="num">${r.watchse3}</td></tr>`
+    `<tr><td>${fmtDate(r.date)}</td><td>${esc(r.staff)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td>${deviceTds(r)}<td class="num">${r.demoFilled ? r.demo : '-'}</td></tr>`
   ).join('');
 }
 
@@ -1429,7 +1631,7 @@ function renderDeviceLog(monthRows){
     if(!keys.some(k=>r[k] > 0)) return;
     const id = r.staff + '|' + dayKey(r.date);
     if(!map.has(id)){
-      map.set(id, { date: new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate()), staff: r.staff, iphone15:0, ipada16:0, macbookneo:0, watchse3:0 });
+      map.set(id, { date: new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate()), staff: r.staff, ...zeroDevices() });
     }
     const e = map.get(id);
     DEVICE_KEYS.forEach(k=>{ e[k] += r[k]; });
@@ -1477,7 +1679,7 @@ function renderDeviceLog(monthRows){
   }else{
     const groups = new Map();
     entries.forEach(e=>{
-      if(!groups.has(e.staff)) groups.set(e.staff, { staff:e.staff, items:[], totals:{iphone15:0, ipada16:0, macbookneo:0, watchse3:0} });
+      if(!groups.has(e.staff)) groups.set(e.staff, { staff:e.staff, items:[], totals: zeroDevices() });
       const g = groups.get(e.staff);
       g.items.push(e);
       DEVICE_KEYS.forEach(k=>{ g.totals[k] += e[k]; });
@@ -1501,6 +1703,12 @@ function renderDeviceLog(monthRows){
   }
 }
 
+function buildDeviceLogChips(){
+  document.getElementById('deviceLogFilters').innerHTML =
+    '<button class="chip-btn active" data-product="ALL">Semua Produk</button>' +
+    DEVICE_KEYS.map(k=>`<button class="chip-btn" data-product="${k}">${DEVICE_TARGETS[k].label}</button>`).join('');
+}
+buildDeviceLogChips();
 document.getElementById('deviceLogFilters').addEventListener('click', (e)=>{
   const b = e.target.closest('button[data-product]');
   if(!b) return;
@@ -1530,7 +1738,7 @@ document.getElementById('deviceLogList').addEventListener('click', (e)=>{
 
 /* ---------- mode trainer (PIN) ---------- */
 /* PIN default: 481926 -> ganti lewat menu "Ganti PIN trainer" di panel, lalu ganti kode di bawah ini */
-const TRAINER_PIN_HASH = '7e9fd0a60194d42da8199787710b720eee8f3a0492fd52070801b80d5de9b5eb';
+const TRAINER_PIN_HASH = '72126e8f371e6eacaedcb1458fc9e0dac0d53f00dc4f92fdea203fb774394f85';
 
 async function hashPin(pin){
   const data = new TextEncoder().encode('esm126:' + pin);
