@@ -587,7 +587,7 @@ const TARGET_NEWMEMBER_DAILY = 2;
    Dibagi rata ke staff aktif jualan dan ke 7 hari. Satu bulan dihitung WEEKS_PER_MONTH minggu. */
 const ACTIVE_SELLERS = 7;
 const WEEKS_PER_MONTH = 4;
-const MIN_WEEKLY_PER_STAFF = 1;   /* target per staff yang hasilnya di bawah 1 dinaikkan jadi 1 */
+const MIN_WEEKLY_PER_STAFF = 1;   /* target per staff dibulatkan ke atas (unit utuh), minimal 1 */
 const DEVICE_TARGETS = {
   iphone18:   { label:'iPhone 18 Pro/Max', weeklyStore:42 },
   iphone15:   { label:'iPhone 15',         weeklyStore:19 },
@@ -599,7 +599,7 @@ const DEVICE_TARGETS = {
 const DEVICE_KEYS = ['iphone18','iphone15','macbookneo','airpods','ipada16','watchse3'];
 DEVICE_KEYS.forEach(k=>{
   const c = DEVICE_TARGETS[k];
-  c.weekly = Math.max(MIN_WEEKLY_PER_STAFF, c.weeklyStore / ACTIVE_SELLERS);   /* per staff / minggu */
+  c.weekly = Math.max(MIN_WEEKLY_PER_STAFF, Math.ceil(c.weeklyStore / ACTIVE_SELLERS - 1e-9));   /* per staff / minggu, unit utuh */
   c.dailyPerStaff = c.weekly / 7;                       /* per staff / hari   */
   c.monthlyTotal = c.weeklyStore * WEEKS_PER_MONTH;     /* store / bulan      */
   c.monthlyPerStaff = c.weekly * WEEKS_PER_MONTH;       /* per staff / bulan  */
@@ -1094,7 +1094,7 @@ function renderDevice(monthRows){
   document.getElementById('deviceSub').textContent =
     `Target penjualan per minggu (Minggu s/d Sabtu) untuk seluruh store: ` +
     DEVICE_KEYS.map(k=>`${DEVICE_TARGETS[k].label} ${DEVICE_TARGETS[k].weeklyStore}`).join(' \u00B7 ') +
-    `. Dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu). Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
+    `. Dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (dibulatkan ke atas, minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu). Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
   document.getElementById('deviceWeekSub').textContent =
     'Target per staff/minggu: ' + DEVICE_KEYS.map(k=>`${DEVICE_TARGETS[k].label} ${fmtNum(DEVICE_TARGETS[k].weekly)}`).join(' \u00B7 ') + '.';
 
@@ -1399,7 +1399,7 @@ function renderChampion(monthRows){
   }).join('');
 
   document.getElementById('championSalesSub').textContent =
-    `Target store per minggu (Minggu s/d Sabtu) dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu), lalu dibagi 7 hari. Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
+    `Target store per minggu (Minggu s/d Sabtu) dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (dibulatkan ke atas, minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu), lalu dibagi 7 hari. Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
   document.getElementById('championSalesWrap').innerHTML = `<div class="table-scroll"><table>
     <thead><tr><th>LOB</th><th class="num">Store / minggu</th><th class="num">Per staff / minggu</th><th class="num">Per staff / hari</th><th class="num">Rata-rata 1 unit tiap</th><th class="num">Store / bulan</th></tr></thead>
     <tbody>${DEVICE_KEYS.map(k=>{
