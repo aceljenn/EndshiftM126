@@ -600,7 +600,8 @@ const DEVICE_KEYS = ['iphone18','iphone15','macbookneo','airpods','ipada16','wat
 DEVICE_KEYS.forEach(k=>{
   const c = DEVICE_TARGETS[k];
   c.weekly = Math.max(MIN_WEEKLY_PER_STAFF, Math.ceil(c.weeklyStore / ACTIVE_SELLERS - 1e-9));   /* per staff / minggu, unit utuh */
-  c.dailyPerStaff = c.weekly / 7;                       /* per staff / hari   */
+  c.dailyStore = Math.max(1, Math.ceil(c.weeklyStore / 7 - 1e-9));                 /* store / hari, unit utuh     */
+  c.dailyPerStaff = Math.max(1, Math.ceil(c.dailyStore / ACTIVE_SELLERS - 1e-9));  /* per staff / hari, unit utuh */
   c.monthlyTotal = c.weeklyStore * WEEKS_PER_MONTH;     /* store / bulan      */
   c.monthlyPerStaff = c.weekly * WEEKS_PER_MONTH;       /* per staff / bulan  */
 });
@@ -1399,12 +1400,12 @@ function renderChampion(monthRows){
   }).join('');
 
   document.getElementById('championSalesSub').textContent =
-    `Target store per minggu (Minggu s/d Sabtu) dibagi rata ke ${ACTIVE_SELLERS} staff aktif jualan (dibulatkan ke atas, minimal ${MIN_WEEKLY_PER_STAFF} unit per staff per minggu), lalu dibagi 7 hari. Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
+    `Target store per minggu (Minggu s/d Sabtu) dibagi 7 hari dan dibulatkan ke atas menjadi target store per hari. Target per staff juga unit utuh, minimal 1 unit per hari. Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
   document.getElementById('championSalesWrap').innerHTML = `<div class="table-scroll"><table>
-    <thead><tr><th>LOB</th><th class="num">Store / minggu</th><th class="num">Per staff / minggu</th><th class="num">Per staff / hari</th><th class="num">Rata-rata 1 unit tiap</th><th class="num">Store / bulan</th></tr></thead>
+    <thead><tr><th>LOB</th><th class="num">Store / minggu</th><th class="num">Store / hari</th><th class="num">Per staff / hari</th><th class="num">Store / bulan</th></tr></thead>
     <tbody>${DEVICE_KEYS.map(k=>{
       const c = DEVICE_TARGETS[k];
-      return `<tr><td>${c.label}</td><td class="num">${c.weeklyStore}</td><td class="num">${fmtNum(c.weekly)}</td><td class="num">${fmtNum(c.dailyPerStaff)}</td><td class="num">${fmtNum(1 / c.dailyPerStaff)} hari</td><td class="num">${c.monthlyTotal}</td></tr>`;
+      return `<tr><td>${c.label}</td><td class="num">${c.weeklyStore}</td><td class="num">${c.dailyStore}</td><td class="num">${c.dailyPerStaff}</td><td class="num">${c.monthlyTotal}</td></tr>`;
     }).join('')}</tbody></table></div>`;
 
   const wrap = document.getElementById('championDemoWrap');
