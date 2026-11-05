@@ -148,6 +148,15 @@
   .btn-sm{font-size:12px; padding:5px 10px; margin-right:4px;}
   .btn-wa{background:#25D366; border-color:#25D366; color:#fff;}
   .ok-note{background:var(--green-bg); color:var(--green); border-radius:8px; padding:12px 14px; font-weight:700; font-size:13.5px;}
+  .split-bar{display:flex; height:14px; border-radius:7px; overflow:hidden; background:var(--surface-alt);}
+  .split-bar .seg-m{background:var(--green);}
+  .split-bar .seg-n{background:var(--orange);}
+  .split-legend{display:flex; gap:18px; flex-wrap:wrap; margin-top:8px; font-size:12.5px; color:var(--text-muted); font-weight:600;}
+  .split-legend i{display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px;}
+  .split-legend .dot-m{background:var(--green);}
+  .split-legend .dot-n{background:var(--orange);}
+  .rank-bar{height:8px; border-radius:4px; background:var(--surface-alt); min-width:90px; overflow:hidden;}
+  .rank-bar span{display:block; height:100%; background:var(--orange);}
   .trainer-only{display:none;}
   body.trainer-on .trainer-only{display:block;}
   .modal-back{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
@@ -282,6 +291,7 @@
     <button class="side-link" data-view="samudra"><span class="side-icon">&#127754;</span> Try On Samudra</button>
     <button class="side-link" data-view="staffprofile"><span class="side-icon">&#128100;</span> Profil Staff</button>
     <button class="side-link" data-view="champion"><span class="side-icon">&#127942;</span> LOB Champion</button>
+    <button class="side-link" data-view="membership"><span class="side-icon">&#128101;</span> Member vs Non Member</button>
     <button class="side-link" data-view="activitylog"><span class="side-icon">&#128203;</span> Log Aktivitas</button>
 
     <div class="side-title">Isi Form</div>
@@ -539,6 +549,32 @@
       </section>
     </div>
 
+    <div id="view-membership" class="view">
+      <section class="panel">
+        <h2>Member vs Tanpa Member</h2>
+        <p class="panel-sub" id="memberSub"></p>
+        <div class="cards-row" id="memberCards" style="margin-bottom:16px;"></div>
+        <div id="memberBar" style="margin-bottom:26px;"></div>
+
+        <h3 style="font-size:14px; margin:0 0 10px;">Perbandingan Harian</h3>
+        <div class="table-scroll" style="margin-bottom:26px;">
+          <table>
+            <thead><tr><th>Tanggal</th><th class="num">Nota Member</th><th class="num">Tanpa Member</th><th class="num">Total Nota</th><th class="num">% Tanpa Member</th></tr></thead>
+            <tbody id="memberDailyBody"></tbody>
+          </table>
+        </div>
+
+        <h3 style="font-size:14px; margin:0 0 4px;">Staff yang Paling Sering Terima Customer Tanpa Member</h3>
+        <p class="panel-sub" style="margin-top:0;">Diurutkan dari nota tanpa member terbanyak bulan ini.</p>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>#</th><th>Nama Staff</th><th class="num">Nota Tanpa Member</th><th class="num">% dari semua tanpa member</th><th class="num">% dari nota staff</th><th></th></tr></thead>
+            <tbody id="memberStaffBody"></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
     <div id="view-activitylog" class="view">
       <section class="panel">
         <h2>Log Aktivitas</h2>
@@ -608,6 +644,12 @@ DEVICE_KEYS.forEach(k=>{
 function fmtNum(n){ return Number(n).toLocaleString('id-ID', {maximumFractionDigits:2}); }
 function zeroDevices(){ const o = {}; DEVICE_KEYS.forEach(k=>{ o[k] = 0; }); return o; }
 
+/* Nota tanpa member / walk-in. Kolom dikenali dari header yang mengandung: "tanpa member", "non member", atau "walk in".
+   TOTAL_INVOICE_INCLUDES_NONMEMBER = true  -> kolom Total Invoice sudah mencakup SEMUA nota, jadi nota member = Total Invoice - nota tanpa member.
+   Ubah ke false kalau Total Invoice hanya berisi nota member (nota tanpa member lalu ditambahkan ke total). */
+const NONMEMBER_RE = /tanpa member|non.?member|walk.?in/;
+const TOTAL_INVOICE_INCLUDES_NONMEMBER = true;
+
 /* LOB Champion per staff. Nama LOB (kanan) harus sama dengan salah satu kunci di LOB_DEFS. */
 const LOB_CHAMPIONS = {
   'Arya Dwi Persada': 'watchse3',
@@ -655,6 +697,11 @@ const HISTORICAL_BACKFILL_RAW = [
   {date:[2026,8,7], staff:'Firly Savira Oktaviandi', iphone15:1},
   {date:[2026,8,9], staff:'Harti Fitrianingsih', iphone15:1},
   {date:[2026,8,9], staff:'Fidiartiningsih', iphone15:1},
+  /* nota tanpa member (walk-in) 1-4 November 2026 yang belum ada kolomnya di form */
+  {date:[2026,10,1], staff:'Abdul Rosyid Faqih', nonmember:1},
+  {date:[2026,10,2], staff:'Harti Fitrianingsih', nonmember:1},
+  {date:[2026,10,3], staff:'Firly Savira Oktaviandi', nonmember:1},
+  {date:[2026,10,4], staff:'Firly Savira Oktaviandi', nonmember:1},
 ];
 
 const MONTH_NAMES = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
@@ -693,6 +740,7 @@ const VIEW_TITLES = {
   'samudra':'Try On Samudra',
   'staffprofile':'Profil Staff',
   'champion':'LOB Champion',
+  'membership':'Member vs Non Member',
   'activitylog':'Log Aktivitas',
 };
 function showView(name){
@@ -783,7 +831,7 @@ function demoToday(){
 }
 function makeRow(p){
   return {
-    date: p.date, staff: p.staff, backfill: !!p.backfill,
+    date: p.date, staff: p.staff, backfill: !!p.backfill, nonmember: p.nonmember||0,
     invoice: p.invoice||0, nps: p.nps||0, aksara: p.aksara||0, samudra: p.samudra||0,
     newmember: p.newmember||0,
     demo: p.demo||0, demoFilled: !!p.demoFilled, airpods: p.airpods||0,
@@ -808,7 +856,8 @@ async function fetchSheetData(){
       timestamp: cols.findIndex(c=>c.includes('timestamp')),
       tanggal: cols.findIndex(c=>c === 'tanggal' || (c.includes('tanggal') && !c.includes('timestamp'))),
       staff: cols.findIndex(c=>c.includes('nama staff') || c.includes('staff')),
-      invoice: cols.findIndex(c=>c.includes('invoice')),
+      invoice: cols.findIndex(c=>c.includes('invoice') && !NONMEMBER_RE.test(c)),
+      nonmember: cols.findIndex(c=>NONMEMBER_RE.test(c)),
       nps: cols.findIndex(c=>c.includes('nps')),
       aksara: cols.findIndex(c=>c.includes('aksara')),
       samudra: cols.findIndex(c=>c.includes('samudra')),
@@ -843,7 +892,7 @@ async function fetchSheetData(){
         newmember: parseNum(c(idx.newmember)),
         iphone18: parseNum(c(idx.iphone18)), iphone15: parseNum(c(idx.iphone15)), ipada16: parseNum(c(idx.ipada16)),
         macbookneo: parseNum(c(idx.macbookneo)), watchse3: parseNum(c(idx.watchse3)),
-        airpods: parseNum(c(idx.airpods)),
+        airpods: parseNum(c(idx.airpods)), nonmember: parseNum(c(idx.nonmember)),
         demo: demoIdx >= 0 ? parseDemo(c(demoIdx)) : 0,
         demoFilled: demoIdx >= 0 && !!c(demoIdx) && c(demoIdx).v != null && String(c(demoIdx).v).trim() !== '',
       });
@@ -851,7 +900,7 @@ async function fetchSheetData(){
 
     const backfill = HISTORICAL_BACKFILL_RAW.map(p => makeRow({
       date: new Date(p.date[0], p.date[1], p.date[2]),
-      staff: p.staff, nps: p.nps, newmember: p.newmember, backfill: true,
+      staff: p.staff, nps: p.nps, newmember: p.newmember, nonmember: p.nonmember, backfill: true,
       iphone15: p.iphone15, ipada16: p.ipada16, macbookneo: p.macbookneo, watchse3: p.watchse3,
     }));
     allRows = [...backfill, ...allRows];
@@ -905,13 +954,13 @@ function exportCSV(){
   rows.push(['Diexport oleh', 'aceljenn (Jennifer)']);
   rows.push(['Tanggal export', new Date().toLocaleString('id-ID')]);
   rows.push([]);
-  rows.push(['Tanggal','Nama Staff','Qty Invoice','Total NPS','New Member','Try On Aksara','Try On Samudra', ...DEVICE_KEYS.map(k=>DEVICE_TARGETS[k].label), 'Demo LOB']);
+  rows.push(['Tanggal','Nama Staff','Qty Invoice','Nota Tanpa Member','Total NPS','New Member','Try On Aksara','Try On Samudra', ...DEVICE_KEYS.map(k=>DEVICE_TARGETS[k].label), 'Demo LOB']);
   monthRows.forEach(r=>{
-    rows.push([fmtDate(r.date), r.staff, r.invoice, r.nps, r.newmember, r.aksara, r.samudra, ...DEVICE_KEYS.map(k=>r[k]), r.demoFilled ? r.demo : '']);
+    rows.push([fmtDate(r.date), r.staff, r.invoice, r.nonmember, r.nps, r.newmember, r.aksara, r.samudra, ...DEVICE_KEYS.map(k=>r[k]), r.demoFilled ? r.demo : '']);
   });
   const sum = k => monthRows.reduce((t,r)=>t+r[k],0);
   rows.push([]);
-  rows.push(['TOTAL BULAN INI', '', sum('invoice'), sum('nps'), sum('newmember'), sum('aksara'), sum('samudra'), ...DEVICE_KEYS.map(k=>sum(k)), sum('demo')]);
+  rows.push(['TOTAL BULAN INI', '', sum('invoice'), sum('nonmember'), sum('nps'), sum('newmember'), sum('aksara'), sum('samudra'), ...DEVICE_KEYS.map(k=>sum(k)), sum('demo')]);
   rows.push([]);
   rows.push(['Target NPS Bulanan', TARGET_NPS_MONTHLY]);
   rows.push(['Target NPS Harian', TARGET_NPS_DAILY]);
@@ -952,6 +1001,7 @@ function renderAll(){
   renderTryOn(monthRows, 'samudra', TARGET_SAMUDRA_MIN, false);
   renderStaffProfile(monthRows);
   renderChampion(monthRows);
+  renderMembership(monthRows);
   renderActivityLog(monthRows);
 }
 
@@ -1271,6 +1321,17 @@ function renderHome(monthRows){
     ok: demoStarted() ? lobOk === lobKeys.length : null,
   });
 
+  const spMonth = invoiceSplit(monthRows);
+  const spToday = invoiceSplit(todayRows);
+  cards.push({
+    icon:'&#128101;', title:'Member vs Tanpa Member', view:'membership',
+    rows:[
+      ['Bulan Ini', `${spMonth.member} member \u00B7 ${spMonth.non} tanpa member`],
+      ['Hari Ini', `${spToday.member} member \u00B7 ${spToday.non} tanpa member`],
+    ],
+    ok: null,
+  });
+
   const grid = document.getElementById('homeGrid');
   grid.innerHTML = cards.map(c => `
     <div class="big-card" data-view="${c.view}">
@@ -1307,6 +1368,7 @@ function renderStaffProfile(monthRows){
   const rs = monthRows.filter(r=>r.staff===selectedProfileStaff);
   const totalNps = rs.reduce((s,r)=>s+r.nps,0);
   const totalInvoice = rs.reduce((s,r)=>s+r.invoice,0);
+  const sp = invoiceSplit(rs);
   const totalNewMember = rs.reduce((s,r)=>s+r.newmember,0);
   const totalAksara = rs.reduce((s,r)=>s+r.aksara,0);
   const totalSamudra = rs.reduce((s,r)=>s+r.samudra,0);
@@ -1340,7 +1402,7 @@ function renderStaffProfile(monthRows){
   }
   cardsEl.innerHTML = champHtml + `
     <div class="stat-card"><div class="sc-label">Total NPS</div><div class="sc-value">${totalNps}</div><div class="sc-sub">kontribusi bulan ini</div></div>
-    <div class="stat-card"><div class="sc-label">Total Qty Invoice</div><div class="sc-value">${fmtQty(totalInvoice)}</div><div class="sc-sub">bulan ini</div></div>
+    <div class="stat-card"><div class="sc-label">Total Qty Invoice</div><div class="sc-value">${fmtQty(sp.total)}</div><div class="sc-sub">${sp.member} member &middot; ${sp.non} tanpa member</div></div>
     <div class="stat-card"><div class="sc-label">Total New Member</div><div class="sc-value">${totalNewMember}</div><div class="sc-sub">bulan ini</div></div>
     <div class="stat-card"><div class="sc-label">Try On Aksara / Samudra</div><div class="sc-value">${totalAksara} / ${totalSamudra}</div><div class="sc-sub">bulan ini</div></div>
   `;
@@ -1354,14 +1416,14 @@ function renderStaffProfile(monthRows){
   }).join('');
 
   document.getElementById('staffProfileLogHead').innerHTML =
-    `<tr><th>Tanggal</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th>${deviceTh()}<th class="num">Demo LOB</th></tr>`;
+    `<tr><th>Tanggal</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">Tanpa Member</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th>${deviceTh()}<th class="num">Demo LOB</th></tr>`;
   const logBody = document.getElementById('staffProfileLogBody');
   const sorted = rs.slice().sort((a,b)=> b.date - a.date);
   if(sorted.length === 0){
-    logBody.innerHTML = `<tr><td colspan="${7 + DEVICE_KEYS.length}" class="empty-note">Belum ada aktivitas tercatat bulan ini.</td></tr>`;
+    logBody.innerHTML = `<tr><td colspan="${8 + DEVICE_KEYS.length}" class="empty-note">Belum ada aktivitas tercatat bulan ini.</td></tr>`;
   }else{
     logBody.innerHTML = sorted.map(r=>
-      `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td>${deviceTds(r)}<td class="num">${r.demoFilled ? r.demo : '-'}</td></tr>`
+      `<tr><td>${fmtDate(r.date)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.nonmember}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td>${deviceTds(r)}<td class="num">${r.demoFilled ? r.demo : '-'}</td></tr>`
     ).join('');
   }
 }
@@ -1442,14 +1504,14 @@ function renderActivityLog(monthRows){
     .slice().sort((a,b)=> b.date - a.date);
 
   document.getElementById('activityLogHead').innerHTML =
-    `<tr><th>Tanggal</th><th>Nama Staff</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th>${deviceTh()}<th class="num">Demo LOB</th></tr>`;
+    `<tr><th>Tanggal</th><th>Nama Staff</th><th class="num">NPS</th><th class="num">Qty Invoice</th><th class="num">Tanpa Member</th><th class="num">New Member</th><th class="num">Aksara</th><th class="num">Samudra</th>${deviceTh()}<th class="num">Demo LOB</th></tr>`;
   const body = document.getElementById('activityLogBody');
   if(filtered.length === 0){
-    body.innerHTML = `<tr><td colspan="${8 + DEVICE_KEYS.length}" class="empty-note">Belum ada submission form untuk bulan/filter ini.</td></tr>`;
+    body.innerHTML = `<tr><td colspan="${9 + DEVICE_KEYS.length}" class="empty-note">Belum ada submission form untuk bulan/filter ini.</td></tr>`;
     return;
   }
   body.innerHTML = filtered.map(r=>
-    `<tr><td>${fmtDate(r.date)}</td><td>${esc(r.staff)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td>${deviceTds(r)}<td class="num">${r.demoFilled ? r.demo : '-'}</td></tr>`
+    `<tr><td>${fmtDate(r.date)}</td><td>${esc(r.staff)}</td><td class="num">${r.nps}</td><td class="num">${fmtQty(r.invoice)}</td><td class="num">${r.nonmember}</td><td class="num">${r.newmember}</td><td class="num">${r.aksara}</td><td class="num">${r.samudra}</td>${deviceTds(r)}<td class="num">${r.demoFilled ? r.demo : '-'}</td></tr>`
   ).join('');
 }
 
@@ -1777,6 +1839,74 @@ document.getElementById('newPinBtn').addEventListener('click', async ()=>{
   document.getElementById('newPinHash').value = await hashPin(v);
 });
 try{ if(sessionStorage.getItem('esm126-trainer') === '1') setTrainerMode(true); }catch(e){}
+
+/* ---------- member vs tanpa member ---------- */
+function invoiceSplit(rows){
+  const T = rows.reduce((s,r)=>s+r.invoice,0);
+  const N = rows.reduce((s,r)=>s+r.nonmember,0);
+  const member = TOTAL_INVOICE_INCLUDES_NONMEMBER ? Math.max(0, T - N) : T;
+  const total = member + N;
+  return { member, non:N, total, pct: total > 0 ? Math.round(N / total * 100) : 0 };
+}
+
+function renderMembership(monthRows){
+  const sp = invoiceSplit(monthRows);
+  document.getElementById('memberSub').textContent = TOTAL_INVOICE_INCLUDES_NONMEMBER
+    ? 'Nota member = Total Invoice dikurangi nota tanpa member (Total Invoice dianggap sudah mencakup semua nota). Nota tanpa member diinput staff di form.'
+    : 'Nota member = Total Invoice. Nota tanpa member diinput terpisah oleh staff di form dan ditambahkan ke total.';
+
+  document.getElementById('memberCards').innerHTML = `
+    <div class="stat-card"><div class="sc-label">Nota Member</div><div class="sc-value">${sp.member}</div><div class="sc-sub">bulan ini</div></div>
+    <div class="stat-card"><div class="sc-label">Nota Tanpa Member</div><div class="sc-value">${sp.non}</div><div class="sc-sub">${sp.pct}% dari total nota</div></div>
+    <div class="stat-card"><div class="sc-label">Total Nota</div><div class="sc-value">${sp.total}</div><div class="sc-sub">member + tanpa member</div></div>`;
+
+  const bar = document.getElementById('memberBar');
+  if(sp.total === 0){
+    bar.innerHTML = `<div class="empty-note">Belum ada nota tercatat bulan ini.</div>`;
+  }else{
+    const mp = Math.round(sp.member / sp.total * 100);
+    const np = 100 - mp;
+    bar.innerHTML = `<div class="split-bar"><span class="seg-m" style="width:${mp}%"></span><span class="seg-n" style="width:${np}%"></span></div>
+      <div class="split-legend"><span><i class="dot-m"></i>Member ${sp.member} (${mp}%)</span><span><i class="dot-n"></i>Tanpa member ${sp.non} (${np}%)</span></div>`;
+  }
+
+  /* perbandingan harian */
+  const days = new Map();
+  monthRows.forEach(r=>{
+    const k = dayKey(r.date);
+    if(!days.has(k)) days.set(k, { date:new Date(r.date.getFullYear(), r.date.getMonth(), r.date.getDate()), rows:[] });
+    days.get(k).rows.push(r);
+  });
+  const dayList = Array.from(days.values()).map(d=>({ date:d.date, sp:invoiceSplit(d.rows) }))
+                       .filter(d=>d.sp.total > 0).sort((a,b)=>a.date-b.date);
+  const dailyBody = document.getElementById('memberDailyBody');
+  if(dayList.length === 0){
+    dailyBody.innerHTML = `<tr><td colspan="5" class="empty-note">Belum ada nota tercatat bulan ini.</td></tr>`;
+  }else{
+    dailyBody.innerHTML = dayList.map(d=>
+      `<tr><td>${fmtDate(d.date)}</td><td class="num">${d.sp.member}</td><td class="num">${d.sp.non}</td><td class="num">${d.sp.total}</td><td class="num">${d.sp.pct}%</td></tr>`
+    ).join('') + `<tr class="total-row"><td>TOTAL BULAN INI</td><td class="num">${sp.member}</td><td class="num">${sp.non}</td><td class="num">${sp.total}</td><td class="num">${sp.pct}%</td></tr>`;
+  }
+
+  /* staff yang paling sering terima customer tanpa member */
+  const names = Array.from(new Set([...STAFF_LIST, ...monthRows.map(r=>r.staff)]));
+  const ranking = names.map(name=>{
+    const rs = monthRows.filter(r=>r.staff === name);
+    return { name, sp: invoiceSplit(rs) };
+  }).filter(x=>x.sp.non > 0).sort((a,b)=> b.sp.non - a.sp.non || b.sp.pct - a.sp.pct || a.name.localeCompare(b.name));
+  const staffBody = document.getElementById('memberStaffBody');
+  if(ranking.length === 0){
+    staffBody.innerHTML = `<tr><td colspan="6" class="empty-note">Belum ada nota tanpa member tercatat bulan ini.</td></tr>`;
+  }else{
+    const maxN = ranking[0].sp.non;
+    staffBody.innerHTML = ranking.map((x,i)=>`<tr>
+      <td>${i+1}</td><td>${esc(x.name)}</td><td class="num">${x.sp.non}</td>
+      <td class="num">${sp.non > 0 ? Math.round(x.sp.non / sp.non * 100) : 0}%</td>
+      <td class="num">${x.sp.pct}%</td>
+      <td><div class="rank-bar"><span style="width:${Math.round(x.sp.non / maxN * 100)}%"></span></div></td>
+    </tr>`).join('');
+  }
+}
 
 fetchSheetData();
 </script>
