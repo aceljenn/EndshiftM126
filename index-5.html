@@ -157,6 +157,25 @@
   .split-legend .dot-n{background:var(--orange);}
   .rank-bar{height:8px; border-radius:4px; background:var(--surface-alt); min-width:90px; overflow:hidden;}
   .rank-bar span{display:block; height:100%; background:var(--orange);}
+  .sec-h{font-size:14px; margin:28px 0 10px;}
+  .howto{background:var(--surface-alt); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.55; margin-bottom:14px;}
+  .howto div + div{margin-top:4px;}
+  .lob-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  @media (max-width:760px){.lob-grid{grid-template-columns:1fr;}}
+  .lob-card{background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px 18px; box-shadow:var(--shadow);}
+  .lob-name{font-size:16px; font-weight:800;}
+  .lob-pic{font-size:12.5px; color:var(--text-muted); font-weight:600; margin-bottom:10px;}
+  .lob-block{padding:10px 0; border-top:1px dashed var(--border);}
+  .lob-label{font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); font-weight:700; margin-bottom:4px;}
+  .lob-row{display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;}
+  .lob-big{font-size:26px; font-weight:800; line-height:1.1;}
+  .lob-of{font-size:14px; color:var(--text-muted); font-weight:600;}
+  .lob-note{font-size:12.5px; color:var(--text-muted); margin-top:6px;}
+  .progress-fill.done{background:var(--green);}
+  .chip-status{display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700; white-space:nowrap;}
+  .chip-status.ok{background:var(--green-bg); color:var(--green);}
+  .chip-status.bad{background:var(--red-bg); color:var(--red);}
+  .th-sub{font-size:11px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-muted);}
   .trainer-only{display:none;}
   body.trainer-on .trainer-only{display:block;}
   .modal-back{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
@@ -539,13 +558,20 @@
     <div id="view-champion" class="view">
       <section class="panel">
         <h2>LOB Champion</h2>
-        <p class="panel-sub" id="championSub"></p>
-        <div class="cards-row" id="championCards" style="margin-bottom:20px;"></div>
-        <h3 style="font-size:14px; margin:0 0 10px;">Demo Harian ke Customer</h3>
-        <div id="championDemoWrap" style="margin-bottom:24px;"></div>
-        <h3 style="font-size:14px; margin:0 0 4px;">Target Penjualan per LOB</h3>
-        <p class="panel-sub" style="margin-top:0;" id="championSalesSub"></p>
+        <p class="panel-sub">Satu staff jadi PIC untuk satu LOB. Tiap kartu menunjukkan dua hal saja: <b>demo hari ini</b> dan <b>penjualan minggu ini</b>.</p>
+        <div class="lob-grid" id="championCards"></div>
+
+        <h3 class="sec-h">Target LOB</h3>
+        <div class="howto">
+          <div><b>Demo</b> = jumlah demo ke customer dalam 1 hari (seluruh store).</div>
+          <div><b>Jual</b> = jumlah unit terjual (seluruh store). Minggu dihitung Minggu sampai Sabtu. Angka per hari = target minggu dibagi 7, dibulatkan ke atas.</div>
+          <div>Target per orang selalu unit utuh: <b>minimal 1 unit</b> (tidak ada koma).</div>
+        </div>
         <div id="championSalesWrap"></div>
+
+        <h3 class="sec-h">Riwayat Demo Harian</h3>
+        <p class="panel-sub" id="championSub" style="margin-top:0;"></p>
+        <div id="championDemoWrap"></div>
       </section>
     </div>
 
@@ -1375,31 +1401,9 @@ function renderStaffProfile(monthRows){
 
   const cardsEl = document.getElementById('staffProfileCards');
   const champKey = championLobOf(selectedProfileStaff);
-  let champHtml = '';
-  if(champKey){
-    const def = LOB_DEFS[champKey];
-    const ds = demoStats(monthRows);
-    let demoMonth = 0, okDays = 0;
-    ds.dates.forEach(d=>{
-      const n = (ds.perDay.get(dayKey(d)) || {})[champKey] || 0;
-      demoMonth += n;
-      if(n >= def.demoTarget) okDays++;
-    });
-    const todayN = demoToday()[champKey] || 0;
-    const started = demoStarted();
-    const cfg = DEVICE_TARGETS[champKey];
-    const myWeek = rowsInWeek(currentWeek()).filter(r=>normName(r.staff)===normName(selectedProfileStaff));
-    const salesLine = cfg
-      ? `<div class="sc-sub">Penjualan minggu ini: ${myWeek.reduce((s,r)=>s+r[champKey],0)} / ${fmtNum(cfg.weekly)} unit</div>`
-      : '';
-    champHtml = `<div class="stat-card" style="grid-column:1/-1; border-color:var(--orange); background:var(--orange-bg);">
-      <div class="sc-label" style="color:var(--orange-strong);">&#127942; LOB Champion &mdash; ${def.label}</div>
-      ${started ? `<div class="sc-value">${todayN} <span style="font-size:14px; color:var(--text-muted); font-weight:600;">/ ${def.demoTarget} demo hari ini</span></div>` : '<div class="sc-sub">Demo mulai dihitung Senin, 26 Okt 2026</div>'}
-      <div class="sc-sub">Bulan ini: ${demoMonth} demo &middot; ${okDays} / ${ds.dates.length} hari tercapai</div>
-      ${salesLine}
-      <div style="margin-top:8px;">${started ? badge(todayN >= def.demoTarget,'Tercapai','Belum Tercapai') : '<span class="badge neutral">Belum dimulai</span>'}</div>
-    </div>`;
-  }
+  const champHtml = champKey
+    ? `<div style="grid-column:1/-1;">${lobCardHtml(selectedProfileStaff, champKey, lobCtx())}</div>`
+    : '';
   cardsEl.innerHTML = champHtml + `
     <div class="stat-card"><div class="sc-label">Total NPS</div><div class="sc-value">${totalNps}</div><div class="sc-sub">kontribusi bulan ini</div></div>
     <div class="stat-card"><div class="sc-label">Total Qty Invoice</div><div class="sc-value">${fmtQty(sp.total)}</div><div class="sc-sub">${sp.member} member &middot; ${sp.non} tanpa member</div></div>
@@ -1428,63 +1432,88 @@ function renderStaffProfile(monthRows){
   }
 }
 
-function renderChampion(monthRows){
-  const keys = Object.values(LOB_CHAMPIONS);
-  document.getElementById('championSub').textContent =
-    'Target demo ke customer per hari: ' + keys.map(k=>`${LOB_DEFS[k].label} ${LOB_DEFS[k].demoTarget}`).join(' \u00B7 ') +
-    '. Isian demo dihitung otomatis ke LOB milik staff yang mengisi, mulai Senin, 26 Okt 2026.';
+const LOB_NICK = { 'Arya Dwi Persada':'Arya', 'Abdul Rosyid Faqih':'Faqih', 'Firly Savira Oktaviandi':'Firly', 'Fidiartiningsih':'Fidia' };
+function nickOf(staff){ return LOB_NICK[staff] || String(staff).split(' ')[0]; }
+function lobCtx(){ return { started: demoStarted(), today: demoToday(), wkRows: rowsInWeek(currentWeek()) }; }
 
-  const ds = demoStats(monthRows);
-  const today = demoToday();
-  const started = demoStarted();
-  const wkRows = rowsInWeek(currentWeek());
+function lobCardHtml(staff, key, ctx){
+  const def = LOB_DEFS[key];
+  const cfg = DEVICE_TARGETS[key];
+  const nick = esc(nickOf(staff));
+  const demoNow = ctx.today[key] || 0;
+  const demoBig = ctx.started
+    ? `${demoNow} <span class="lob-of">/ ${def.demoTarget}</span>`
+    : `<span class="lob-of">Mulai ${shortDate(demoStartDay())}</span>`;
+  const demoBadge = ctx.started
+    ? badge(demoNow >= def.demoTarget, 'Tercapai', 'Belum Tercapai')
+    : '<span class="badge neutral">Belum dimulai</span>';
 
-  document.getElementById('championCards').innerHTML = Object.entries(LOB_CHAMPIONS).map(([staff, key])=>{
-    const def = LOB_DEFS[key];
-    let total = 0, okDays = 0;
-    ds.dates.forEach(d=>{
-      const n = (ds.perDay.get(dayKey(d)) || {})[key] || 0;
-      total += n;
-      if(n >= def.demoTarget) okDays++;
-    });
-    const tn = today[key] || 0;
-    const cfg = DEVICE_TARGETS[key];
-    const mine = cfg ? wkRows.filter(r=>normName(r.staff)===normName(staff)).reduce((s,r)=>s+r[key],0) : 0;
-    const store = cfg ? wkRows.reduce((s,r)=>s+r[key],0) : 0;
-    return `<div class="stat-card">
-      <div class="sc-label">&#127942; ${def.label}</div>
-      <div class="sc-value" style="font-size:20px;">${esc(staff)}</div>
-      <div class="sc-sub">${started ? `Demo hari ini: ${tn} / ${def.demoTarget}` : 'Demo mulai dihitung Senin, 26 Okt 2026'}</div>
-      <div class="sc-sub">Bulan ini: ${total} demo &middot; ${okDays} / ${ds.dates.length} hari tercapai</div>
-      ${cfg ? `<div class="sc-sub">Penjualan minggu ini: ${mine} / ${fmtNum(cfg.weekly)} unit</div><div class="sc-sub">Store minggu ini: ${store} / ${cfg.weeklyStore} unit</div>` : ''}
-      <div style="margin-top:8px;">${started ? badge(tn >= def.demoTarget,'Tercapai','Belum Tercapai') : '<span class="badge neutral">Belum dimulai</span>'}</div>
+  let salesBlock = '';
+  if(cfg){
+    const store = ctx.wkRows.reduce((s,r)=>s+r[key],0);
+    const mine = ctx.wkRows.filter(r=>normName(r.staff)===normName(staff)).reduce((s,r)=>s+r[key],0);
+    const done = store >= cfg.weeklyStore;
+    const pct = Math.min(100, Math.round(store / cfg.weeklyStore * 100));
+    salesBlock = `<div class="lob-block">
+      <div class="lob-label">Penjualan minggu ini (seluruh store)</div>
+      <div class="lob-row"><div class="lob-big">${store} <span class="lob-of">/ ${cfg.weeklyStore} unit</span></div>${badge(done,'Tercapai','Belum Tercapai')}</div>
+      <div class="progress-track"><div class="progress-fill ${done ? 'done' : ''}" style="width:${pct}%"></div></div>
+      <div class="lob-note">${nick} sendiri: ${mine} unit (target ${cfg.weekly})${mine >= cfg.weekly ? ' &#10003;' : ''}</div>
     </div>`;
-  }).join('');
+  }
+  return `<div class="lob-card">
+    <div class="lob-name">&#127942; ${def.label}</div>
+    <div class="lob-pic">PIC: ${nick}</div>
+    <div class="lob-block">
+      <div class="lob-label">Demo hari ini</div>
+      <div class="lob-row"><div class="lob-big">${demoBig}</div>${demoBadge}</div>
+      <div class="lob-note">Target ${def.demoTarget} demo per hari</div>
+    </div>
+    ${salesBlock}
+  </div>`;
+}
 
-  document.getElementById('championSalesSub').textContent =
-    `Target store per minggu (Minggu s/d Sabtu) dibagi 7 hari dan dibulatkan ke atas menjadi target store per hari. Target per staff juga unit utuh, minimal 1 unit per hari. Satu bulan dihitung ${WEEKS_PER_MONTH} minggu.`;
+function renderChampion(monthRows){
+  const entries = Object.entries(LOB_CHAMPIONS);
+  const ctx = lobCtx();
+  document.getElementById('championCards').innerHTML = entries.map(([staff,key])=>lobCardHtml(staff, key, ctx)).join('');
+
+  /* tabel target (singkat) */
+  const pic = {};
+  entries.forEach(([staff,key])=>{ pic[key] = nickOf(staff); });
   document.getElementById('championSalesWrap').innerHTML = `<div class="table-scroll"><table>
-    <thead><tr><th>LOB</th><th class="num">Store / minggu</th><th class="num">Store / hari</th><th class="num">Per staff / hari</th><th class="num">Store / bulan</th></tr></thead>
+    <thead><tr><th>LOB</th><th>PIC</th><th class="num">Target demo / hari</th><th class="num">Target jual / minggu</th><th class="num">Setara jual / hari</th></tr></thead>
     <tbody>${DEVICE_KEYS.map(k=>{
       const c = DEVICE_TARGETS[k];
-      return `<tr><td>${c.label}</td><td class="num">${c.weeklyStore}</td><td class="num">${c.dailyStore}</td><td class="num">${c.dailyPerStaff}</td><td class="num">${c.monthlyTotal}</td></tr>`;
+      const d = LOB_DEFS[k];
+      return `<tr><td>${c.label}</td><td>${pic[k] ? esc(pic[k]) : '-'}</td><td class="num">${d ? d.demoTarget : '-'}</td><td class="num">${c.weeklyStore}</td><td class="num">${c.dailyStore}</td></tr>`;
     }).join('')}</tbody></table></div>`;
 
+  /* riwayat demo harian */
+  document.getElementById('championSub').textContent =
+    `Hijau = tercapai, merah = belum. Demo mulai dihitung ${fmtDate(demoStartDay())}. Terbaru di paling atas.`;
+  const ds = demoStats(monthRows);
   const wrap = document.getElementById('championDemoWrap');
   if(ds.dates.length === 0){
-    wrap.innerHTML = `<div class="empty-note">${demoStarted() ? 'Belum ada isian demo LOB Champion di bulan ini.' : 'Penghitungan demo dimulai Senin, 26 Okt 2026.'}</div>`;
+    wrap.innerHTML = `<div class="empty-note">${ctx.started ? 'Belum ada isian demo LOB Champion di bulan ini.' : 'Penghitungan demo dimulai ' + fmtDate(demoStartDay()) + '.'}</div>`;
     return;
   }
-  const head = `<tr><th>Tanggal</th>${keys.map(k=>`<th colspan="2" class="num">${LOB_DEFS[k].label} (target ${LOB_DEFS[k].demoTarget})</th>`).join('')}</tr>`;
-  const body = ds.dates.map(d=>{
+  const head = `<tr><th>Tanggal</th>${entries.map(([staff,key])=>`<th class="num">${LOB_DEFS[key].label}<div class="th-sub">${esc(nickOf(staff))} &middot; target ${LOB_DEFS[key].demoTarget}</div></th>`).join('')}</tr>`;
+  const okDays = {};
+  entries.forEach(([staff,key])=>{ okDays[key] = 0; });
+  const rows = ds.dates.slice().reverse().map(d=>{
     const per = ds.perDay.get(dayKey(d)) || {};
-    const cells = keys.map(k=>{
-      const n = per[k] || 0;
-      return `<td class="num">${n} / ${LOB_DEFS[k].demoTarget}</td><td>${badge(n >= LOB_DEFS[k].demoTarget,'Tercapai','Belum Tercapai')}</td>`;
+    const cells = entries.map(([staff,key])=>{
+      const n = per[key] || 0;
+      const t = LOB_DEFS[key].demoTarget;
+      const ok = n >= t;
+      if(ok) okDays[key]++;
+      return `<td class="num"><span class="chip-status ${ok ? 'ok' : 'bad'}">${n} / ${t} &middot; ${ok ? 'Tercapai' : 'Belum'}</span></td>`;
     }).join('');
     return `<tr><td>${fmtDate(d)}</td>${cells}</tr>`;
   }).join('');
-  wrap.innerHTML = `<div class="table-scroll"><table><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+  const summary = `<tr class="total-row"><td>Hari tercapai</td>${entries.map(([staff,key])=>`<td class="num">${okDays[key]} dari ${ds.dates.length} hari</td>`).join('')}</tr>`;
+  wrap.innerHTML = `<div class="table-scroll"><table><thead>${head}</thead><tbody>${rows}${summary}</tbody></table></div>`;
 }
 
 function renderActivityLog(monthRows){
