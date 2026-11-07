@@ -176,6 +176,17 @@
   .chip-status.ok{background:var(--green-bg); color:var(--green);}
   .chip-status.bad{background:var(--red-bg); color:var(--red);}
   .th-sub{font-size:11px; font-weight:600; text-transform:none; letter-spacing:0; color:var(--text-muted);}
+  .lob-grid.four{grid-template-columns:repeat(4,1fr);}
+  @media (max-width:1100px){.lob-grid.four{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:560px){.lob-grid.four{grid-template-columns:1fr;}}
+  .chip-status.low{background:var(--amber-bg); color:var(--amber);}
+  .chip-status.zero{background:var(--red-bg); color:var(--red);}
+  .chip-status.norow{background:var(--surface-alt); color:var(--text-muted);}
+  .alert-bad{background:var(--red-bg); color:var(--red); border-radius:8px; padding:10px 14px; font-size:13.5px; font-weight:600; margin-bottom:8px;}
+  .alert-muted{background:var(--surface-alt); color:var(--text-muted); border-radius:8px; padding:10px 14px; font-size:13px; font-weight:600; margin-bottom:8px;}
+  .t-bad{color:var(--red); font-weight:700;}
+  .t-muted{color:var(--text-muted);}
+  .legend-row{display:flex; gap:8px; flex-wrap:wrap; margin:0 0 8px;}
   .trainer-only{display:none;}
   body.trainer-on .trainer-only{display:block;}
   .modal-back{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:50; padding:20px;}
@@ -558,20 +569,24 @@
     <div id="view-champion" class="view">
       <section class="panel">
         <h2>LOB Champion</h2>
-        <p class="panel-sub">Satu staff jadi PIC untuk satu LOB. Tiap kartu menunjukkan dua hal saja: <b>demo hari ini</b> dan <b>penjualan minggu ini</b>.</p>
-        <div class="lob-grid" id="championCards"></div>
-
-        <h3 class="sec-h">Target LOB</h3>
-        <div class="howto">
-          <div><b>Demo</b> = jumlah demo ke customer dalam 1 hari (seluruh store).</div>
-          <div><b>Jual</b> = jumlah unit terjual (seluruh store). Minggu dihitung Minggu sampai Sabtu. Angka per hari = target minggu dibagi 7, dibulatkan ke atas.</div>
-          <div>Target per orang selalu unit utuh: <b>minimal 1 unit</b> (tidak ada koma).</div>
+        <p class="panel-sub">Pilih apa yang mau dilihat. <b>Demo</b> = PIC memperagakan produk ke customer. <b>Penjualan</b> = unit device yang terjual. Keduanya punya target sendiri, jadi ditampilkan terpisah.</p>
+        <div class="filter-bar" id="championTabs">
+          <button class="chip-btn active" data-ctab="demo">Demo ke Customer</button>
+          <button class="chip-btn" data-ctab="sales">Penjualan Device</button>
         </div>
-        <div id="championSalesWrap"></div>
 
-        <h3 class="sec-h">Riwayat Demo Harian</h3>
-        <p class="panel-sub" id="championSub" style="margin-top:0;"></p>
-        <div id="championDemoWrap"></div>
+        <div id="championDemoView">
+          <div class="lob-grid four" id="championCards" style="margin-bottom:14px;"></div>
+          <div id="championAlert" style="margin-bottom:22px;"></div>
+          <h3 class="sec-h" style="margin-top:6px;">Riwayat Demo Harian</h3>
+          <p class="panel-sub" id="championSub" style="margin-top:0;"></p>
+          <div id="championDemoWrap"></div>
+        </div>
+
+        <div id="championSalesView" style="display:none;">
+          <div class="howto" id="championSalesNote"></div>
+          <div id="championSalesWrap"></div>
+        </div>
       </section>
     </div>
 
@@ -1473,47 +1488,126 @@ function lobCardHtml(staff, key, ctx){
   </div>`;
 }
 
+let championTab = 'demo';
+const DEMO_STATE_LABEL = { ok:'Tercapai', low:'Kurang', zero:'Tidak demo', norow:'Tidak isi form' };
+function demoState(n, target, hasRow){
+  if(n >= target) return 'ok';
+  if(n > 0) return 'low';
+  return hasRow ? 'zero' : 'norow';
+}
+
 function renderChampion(monthRows){
+  document.querySelectorAll('#championTabs button[data-ctab]').forEach(b=>b.classList.toggle('active', b.dataset.ctab === championTab));
+  document.getElementById('championDemoView').style.display = championTab === 'demo' ? 'block' : 'none';
+  document.getElementById('championSalesView').style.display = championTab === 'sales' ? 'block' : 'none';
+  renderChampionDemo(monthRows);
+  renderChampionSales();
+}
+
+function renderChampionDemo(monthRows){
   const entries = Object.entries(LOB_CHAMPIONS);
-  const ctx = lobCtx();
-  document.getElementById('championCards').innerHTML = entries.map(([staff,key])=>lobCardHtml(staff, key, ctx)).join('');
+  const started = demoStarted();
+  const todayMap = demoToday();
+  const present = new Set(allRows.filter(r=>!r.backfill).map(r=>normName(r.staff) + '|' + dayKey(r.date)));
+  const todayKey = dayKey(new Date());
 
-  /* tabel target (singkat) */
-  const pic = {};
-  entries.forEach(([staff,key])=>{ pic[key] = nickOf(staff); });
-  document.getElementById('championSalesWrap').innerHTML = `<div class="table-scroll"><table>
-    <thead><tr><th>LOB</th><th>PIC</th><th class="num">Target demo / hari</th><th class="num">Target jual / minggu</th><th class="num">Setara jual / hari</th></tr></thead>
-    <tbody>${DEVICE_KEYS.map(k=>{
-      const c = DEVICE_TARGETS[k];
-      const d = LOB_DEFS[k];
-      return `<tr><td>${c.label}</td><td>${pic[k] ? esc(pic[k]) : '-'}</td><td class="num">${d ? d.demoTarget : '-'}</td><td class="num">${c.weeklyStore}</td><td class="num">${c.dailyStore}</td></tr>`;
-    }).join('')}</tbody></table></div>`;
+  /* kartu hari ini */
+  const todayStates = entries.map(([staff,key])=>{
+    const n = todayMap[key] || 0;
+    const t = LOB_DEFS[key].demoTarget;
+    return { staff, key, n, t, state: demoState(n, t, present.has(normName(staff) + '|' + todayKey)) };
+  });
+  document.getElementById('championCards').innerHTML = todayStates.map(x=>`<div class="lob-card">
+      <div class="lob-name">&#127942; ${LOB_DEFS[x.key].label}</div>
+      <div class="lob-pic">PIC: ${esc(nickOf(x.staff))}</div>
+      <div class="lob-label">Demo hari ini</div>
+      ${started
+        ? `<div class="lob-big">${x.n} <span class="lob-of">/ ${x.t}</span></div><div style="margin-top:8px;"><span class="chip-status ${x.state}">${DEMO_STATE_LABEL[x.state]}</span></div>`
+        : `<div class="lob-of">Mulai ${shortDate(demoStartDay())}</div>`}
+      <div class="lob-note">Target ${x.t} demo per hari</div>
+    </div>`).join('');
 
-  /* riwayat demo harian */
-  document.getElementById('championSub').textContent =
-    `Hijau = tercapai, merah = belum. Demo mulai dihitung ${fmtDate(demoStartDay())}. Terbaru di paling atas.`;
+  /* siapa yang tidak demo hari ini */
+  const alertEl = document.getElementById('championAlert');
+  if(!started){
+    alertEl.innerHTML = '';
+  }else{
+    const zero = todayStates.filter(x=>x.state === 'zero').map(x=>esc(nickOf(x.staff)));
+    const norow = todayStates.filter(x=>x.state === 'norow').map(x=>esc(nickOf(x.staff)));
+    let html = '';
+    if(zero.length) html += `<div class="alert-bad">Hari ini tidak demo sama sekali: <b>${zero.join(', ')}</b></div>`;
+    if(norow.length) html += `<div class="alert-muted">Belum isi form hari ini: ${norow.join(', ')}</div>`;
+    if(!zero.length && !norow.length) html = `<div class="ok-note">Semua PIC sudah melakukan demo hari ini.</div>`;
+    alertEl.innerHTML = html;
+  }
+
+  /* riwayat harian */
+  document.getElementById('championSub').innerHTML =
+    `<span class="legend-row"><span class="chip-status ok">Tercapai</span><span class="chip-status low">Kurang = ada demo, di bawah target</span><span class="chip-status zero">Tidak demo = isi form, 0 demo</span><span class="chip-status norow">Tidak isi form</span></span>
+     <div>Demo mulai dihitung ${fmtDate(demoStartDay())}. Terbaru di paling atas.</div>`;
   const ds = demoStats(monthRows);
   const wrap = document.getElementById('championDemoWrap');
   if(ds.dates.length === 0){
-    wrap.innerHTML = `<div class="empty-note">${ctx.started ? 'Belum ada isian demo LOB Champion di bulan ini.' : 'Penghitungan demo dimulai ' + fmtDate(demoStartDay()) + '.'}</div>`;
+    wrap.innerHTML = `<div class="empty-note">${started ? 'Belum ada isian demo LOB Champion di bulan ini.' : 'Penghitungan demo dimulai ' + fmtDate(demoStartDay()) + '.'}</div>`;
     return;
   }
-  const head = `<tr><th>Tanggal</th>${entries.map(([staff,key])=>`<th class="num">${LOB_DEFS[key].label}<div class="th-sub">${esc(nickOf(staff))} &middot; target ${LOB_DEFS[key].demoTarget}</div></th>`).join('')}</tr>`;
-  const okDays = {};
-  entries.forEach(([staff,key])=>{ okDays[key] = 0; });
+  const head = `<tr><th>Tanggal</th>${entries.map(([staff,key])=>`<th class="num">${LOB_DEFS[key].label}<div class="th-sub">${esc(nickOf(staff))} &middot; target ${LOB_DEFS[key].demoTarget}</div></th>`).join('')}<th>Tidak demo sama sekali</th></tr>`;
+  const okDays = {}, zeroDays = {};
+  entries.forEach(([staff,key])=>{ okDays[key] = 0; zeroDays[key] = 0; });
   const rows = ds.dates.slice().reverse().map(d=>{
     const per = ds.perDay.get(dayKey(d)) || {};
+    const none = [];
     const cells = entries.map(([staff,key])=>{
       const n = per[key] || 0;
       const t = LOB_DEFS[key].demoTarget;
-      const ok = n >= t;
-      if(ok) okDays[key]++;
-      return `<td class="num"><span class="chip-status ${ok ? 'ok' : 'bad'}">${n} / ${t} &middot; ${ok ? 'Tercapai' : 'Belum'}</span></td>`;
+      const state = demoState(n, t, present.has(normName(staff) + '|' + dayKey(d)));
+      if(state === 'ok') okDays[key]++;
+      if(state === 'zero'){ zeroDays[key]++; none.push(`<span class="t-bad">${esc(nickOf(staff))}</span>`); }
+      if(state === 'norow') none.push(`<span class="t-muted">${esc(nickOf(staff))} (tidak isi form)</span>`);
+      return `<td class="num"><span class="chip-status ${state}">${n} / ${t} &middot; ${DEMO_STATE_LABEL[state]}</span></td>`;
     }).join('');
-    return `<tr><td>${fmtDate(d)}</td>${cells}</tr>`;
+    return `<tr><td>${fmtDate(d)}</td>${cells}<td>${none.length ? none.join(', ') : '-'}</td></tr>`;
   }).join('');
-  const summary = `<tr class="total-row"><td>Hari tercapai</td>${entries.map(([staff,key])=>`<td class="num">${okDays[key]} dari ${ds.dates.length} hari</td>`).join('')}</tr>`;
-  wrap.innerHTML = `<div class="table-scroll"><table><thead>${head}</thead><tbody>${rows}${summary}</tbody></table></div>`;
+  const sumOk = `<tr class="total-row"><td>Hari tercapai</td>${entries.map(([staff,key])=>`<td class="num">${okDays[key]} dari ${ds.dates.length} hari</td>`).join('')}<td></td></tr>`;
+  const sumZero = `<tr class="total-row"><td>Hari tanpa demo</td>${entries.map(([staff,key])=>`<td class="num">${zeroDays[key]} hari</td>`).join('')}<td></td></tr>`;
+  wrap.innerHTML = `<div class="table-scroll"><table><thead>${head}</thead><tbody>${rows}${sumOk}${sumZero}</tbody></table></div>`;
+}
+
+function renderChampionSales(){
+  const entries = Object.entries(LOB_CHAMPIONS);
+  const pic = {};
+  entries.forEach(([staff,key])=>{ pic[key] = staff; });
+  const wk = currentWeek();
+  const wkRows = rowsInWeek(wk);
+  document.getElementById('championSalesNote').innerHTML =
+    `<div><b>Penjualan</b> = jumlah unit device yang terjual (bukan demo).</div>
+     <div>Minggu ini: <b>${weekLabel(wk)}</b> (Minggu sampai Sabtu).</div>
+     <div>"Setara per hari" = target minggu dibagi 7, dibulatkan ke atas. Target PIC sendiri = target minggu dibagi ${ACTIVE_SELLERS} staff, dibulatkan ke atas (minimal 1 unit).</div>`;
+  const rows = DEVICE_KEYS.map(k=>{
+    const c = DEVICE_TARGETS[k];
+    const store = wkRows.reduce((s,r)=>s+r[k],0);
+    const done = store >= c.weeklyStore;
+    const pct = Math.min(100, Math.round(store / c.weeklyStore * 100));
+    const staff = pic[k];
+    let mineCell = '-';
+    if(staff){
+      const mine = wkRows.filter(r=>normName(r.staff) === normName(staff)).reduce((s,r)=>s+r[k],0);
+      mineCell = `${mine} unit (target ${c.weekly})${mine >= c.weekly ? ' &#10003;' : ''}`;
+    }
+    return `<tr>
+      <td>${c.label}</td>
+      <td>${staff ? esc(nickOf(staff)) : '-'}</td>
+      <td style="min-width:200px;">
+        <div class="lob-row"><b>${store} / ${c.weeklyStore} unit</b>${badge(done,'Tercapai','Belum Tercapai')}</div>
+        <div class="progress-track" style="margin-top:6px;"><div class="progress-fill ${done ? 'done' : ''}" style="width:${pct}%"></div></div>
+      </td>
+      <td class="num">${c.dailyStore}</td>
+      <td>${mineCell}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('championSalesWrap').innerHTML = `<div class="table-scroll"><table>
+    <thead><tr><th>LOB</th><th>PIC</th><th>Seluruh store minggu ini</th><th class="num">Setara per hari</th><th>PIC sendiri</th></tr></thead>
+    <tbody>${rows}</tbody></table></div>`;
 }
 
 function renderActivityLog(monthRows){
@@ -1830,7 +1924,7 @@ document.getElementById('deviceLogList').addEventListener('click', (e)=>{
 
 /* ---------- mode trainer (PIN) ---------- */
 /* PIN default: 481926 -> ganti lewat menu "Ganti PIN trainer" di panel, lalu ganti kode di bawah ini */
-const TRAINER_PIN_HASH = '4dc9b4a5804232bcb6fe8856d09643dceef0b2ac49fcc23fc011ceba5356d22e';
+const TRAINER_PIN_HASH = '72126e8f371e6eacaedcb1458fc9e0dac0d53f00dc4f92fdea203fb774394f85';
 
 async function hashPin(pin){
   const data = new TextEncoder().encode('esm126:' + pin);
@@ -1936,6 +2030,13 @@ function renderMembership(monthRows){
     </tr>`).join('');
   }
 }
+
+document.getElementById('championTabs').addEventListener('click', (e)=>{
+  const b = e.target.closest('button[data-ctab]');
+  if(!b) return;
+  championTab = b.dataset.ctab;
+  renderChampion(rowsForMonth(selectedMonthKey));
+});
 
 fetchSheetData();
 </script>
